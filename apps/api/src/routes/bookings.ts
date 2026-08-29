@@ -1,8 +1,8 @@
 import { Router, type Request, type Response, type Router as ExpressRouter } from "express";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq } from "drizzle-orm";
-import { db, mealBookings, messes, subscriptions } from "@samarth-mess/db";
-import { BookingParamsSchema, BookingQuerySchema, BookingSchema, BookingUpdateSchema } from "@samarth-mess/validation";
+import { db, mealBookings, messes, subscriptions, users } from "@samarth-mess/db";
+import { BookingParamsSchema, BookingQuerySchema, BookingSchema, BookingUpdateSchema, ExtraMealSchema } from "@samarth-mess/validation";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireRole } from "../middleware/authorize.js";
 import { createApiError } from "../middleware/errorHandler.js";
@@ -66,5 +66,29 @@ bookingRouter.get("/bookings", authenticate, requireRole("USER"), validate(Booki
     if (query.date) filters.push(eq(mealBookings.date, query.date));
     const rows = await db.select().from(mealBookings).where(and(...filters)).orderBy(desc(mealBookings.date), desc(mealBookings.createdAt)).limit(query.limit).offset((query.page - 1) * query.limit);
     res.json({ success: true, data: { items: rows, page: query.page, limit: query.limit }, timestamp: new Date().toISOString() });
+  } catch (error) { next(error); }
+});
+
+bookingRouter.post("/extra-meals", authenticate, requireRole("USER"), validate(ExtraMealSchema), async (req: Request, res: Response, next) => {
+  try {
+    const input = req.body as { messId: string; date: string; mealType: "BREAKFAST" | "LUNCH" | "DINNER" };
+    await validateBookingAccess(req.user.id, input.messId, input.date);
+    const [booking] = await db.insert(mealBookings).values({ id: randomUUID(), userId: req.user.id, messId: input.messId, date: input.date, mealType: input.mealType, status: "EXTRA" }).onConflictDoUpdate({
+      target: [mealBookings.userId, mealBookings.date, mealBookings.mealType],
+      set: { status: "EXTRA", messId: input.messId, updatedAt: new Date() }
+    }).returning();
+    res.status(201).json({ success: true, data: { booking }, timestamp: new Date().toISOString() });
+  } catch (error) { next(error); }
+});
+
+bookingRouter.get("/owner/extra-meals", authenticate, requireRole("OWNER"), async (req: Request, res: Response, next) => {
+  try {
+    const rows = await db.select({ booking: mealBookings, user: { id: users.id, name: users.name, phone: users.phone }, mess: messes })
+      .from(mealBookings)
+      .innerJoin(users, eq(users.id, mealBookings.userId))
+      .innerJoin(messes, eq(messes.id, mealBookings.messId))
+      .where(and(eq(mealBookings.status, "EXTRA"), eq(messes.ownerId, req.user.id)))
+      .orderBy(desc(mealBookings.date), desc(mealBookings.createdAt));
+    res.json({ success: true, data: { items: rows }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });

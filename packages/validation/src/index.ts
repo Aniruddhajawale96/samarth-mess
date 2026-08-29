@@ -125,6 +125,8 @@ export const BookingQuerySchema = z.object({
   date: DateSchema.optional(),
   status: z.string().trim().max(50).optional()
 }).strict();
+export const ExtraMealSchema = z.object({ messId: IdSchema, date: DateSchema, mealType: MealTypeSchema }).strict();
+export const QrTokenSchema = z.object({ token: z.string().trim().min(20).max(200) }).strict();
 
 export const VerifyPhoneSchema = z.object({ code: z.string().trim().regex(/^\d{4,8}$/, "Verification code must be numeric") }).strict();
 

@@ -1259,10 +1259,10 @@ Do not invent complex pricing rules.
 ### Validation
 
 ```text
-[ ] Active subscriber can request extra meal
-[ ] Owner can see extra meals
-[ ] Duplicate extra requests are controlled
-[ ] History shows extra meal records
+[x] Active subscriber can request extra meal
+[x] Owner can see extra meals
+[x] Duplicate extra requests are controlled
+[x] History shows extra meal records
 ```
 
 ### Suggested commit
@@ -1289,10 +1289,10 @@ Create a secure QR representation for attendance.
 ### Validation
 
 ```text
-[ ] Active user can display QR
-[ ] QR contains only safe opaque data
-[ ] Token can be resolved by backend
-[ ] Invalid token is rejected
+[x] Active user can display QR
+[x] QR contains only safe opaque data
+[x] Token can be resolved by backend
+[x] Invalid token is rejected
 ```
 
 ### Suggested commit
@@ -2239,8 +2239,8 @@ Use this section as the quick status overview.
 [x] Commit 20 — Owner Subscription Approval
 [x] Commit 21 — Meal Booking
 [x] Commit 22 — Meal Skip Cutoff
-[ ] Commit 23 — Extra Meals
-[ ] Commit 24 — User QR Identity
+[x] Commit 23 — Extra Meals
+[x] Commit 24 — User QR Identity
 [ ] Commit 25 — Manual Attendance
 [ ] Commit 26 — QR Attendance
 [ ] Commit 27 — Payment History and Invoice Access
