@@ -31,6 +31,7 @@ import { customerRouter } from "./routes/customers.js";
 import { adminRouter } from "./routes/admin.js";
 import { notificationRouter } from "./routes/notifications.js";
 import path from "node:path";
+import { rateLimit } from "./middleware/rateLimit.js";
 
 export function createApp(): Express {
   const app = express();
@@ -60,6 +61,8 @@ export function createApp(): Express {
 
   // ── Structured request logging ─────────────────────────────────────────────
   app.use(requestLoggerMiddleware);
+  app.use(rateLimit({ windowMs: 60_000, max: 120, name: "global" }));
+  app.use("/auth", rateLimit({ windowMs: 60_000, max: 20, name: "auth" }));
   app.use("/uploads", express.static(path.resolve("uploads")));
 
   // ── Routes ─────────────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ import { createApiError } from "../middleware/errorHandler.js";
 import { validate } from "../middleware/validate.js";
 import { ensureInvoice } from "../lib/invoice.js";
 import { deliverInvoice } from "../lib/whatsapp.js";
+import { enqueueInvoiceDelivery } from "../lib/queue.js";
 import { notify } from "../lib/notifications.js";
 import { recordAudit } from "../lib/audit.js";
 
@@ -92,7 +93,7 @@ paymentRouter.post("/payments/:paymentId/verify", authenticate, requireRole("USE
       const [invoice] = await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.paymentId, updated.id)).limit(1);
       void notify({ event: "PAYMENT_SUCCESSFUL", recipientUserId: updated.userId, payload: { paymentId: updated.id, amount: updated.amount, currency: updated.currency } });
       if (invoice) void notify({ event: "INVOICE_AVAILABLE", recipientUserId: updated.userId, payload: { paymentId: updated.id, invoiceId: invoice.id } });
-      if (invoice) await deliverInvoice(invoice.id);
+      if (invoice) await enqueueInvoiceDelivery(invoice.id, () => deliverInvoice(invoice.id));
     }
     res.json({ success: true, data: { payment: updated, subscriptionStatus: "PENDING_APPROVAL" }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
@@ -134,7 +135,7 @@ paymentRouter.post("/webhooks/payment", validate(PaymentWebhookSchema), async (r
       const [successfulPayment] = await db.select({ userId: payments.userId, amount: payments.amount, currency: payments.currency }).from(payments).where(eq(payments.id, changedPayment.id)).limit(1);
       if (successfulPayment) void notify({ event: "PAYMENT_SUCCESSFUL", recipientUserId: successfulPayment.userId, payload: { paymentId: changedPayment.id, amount: successfulPayment.amount, currency: successfulPayment.currency } });
       if (successfulPayment && invoice) void notify({ event: "INVOICE_AVAILABLE", recipientUserId: successfulPayment.userId, payload: { paymentId: changedPayment.id, invoiceId: invoice.id } });
-      if (invoice) await deliverInvoice(invoice.id);
+      if (invoice) await enqueueInvoiceDelivery(invoice.id, () => deliverInvoice(invoice.id));
     }
     res.json({ success: true, data: { processed: true }, timestamp: new Date().toISOString() });
   } catch (error) {

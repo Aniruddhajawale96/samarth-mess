@@ -21,6 +21,7 @@ class GraphWhatsAppProvider implements WhatsAppProvider {
     const phoneNumberId = config.whatsapp.phoneNumberId;
     if (!apiKey || !phoneNumberId) throw new Error("WhatsApp provider is not configured");
     const response = await fetch(`${config.whatsapp.apiUrl}/${phoneNumberId}/messages`, {
+      signal: AbortSignal.timeout(10000),
       method: "POST",
       headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
       body: JSON.stringify({

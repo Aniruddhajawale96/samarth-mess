@@ -1,4 +1,6 @@
 import { mkdirSync } from "node:fs";
+import { readFile, unlink } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import multer from "multer";
 import type { NextFunction, Request, Response } from "express";
@@ -11,7 +13,7 @@ const storage = multer.diskStorage({
   destination: uploadDirectory,
   filename: (_req, file, callback) => {
     const extension = path.extname(file.originalname).toLowerCase();
-    callback(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${extension}`);
+    callback(null, `${randomUUID()}${extension}`);
   }
 });
 
@@ -38,7 +40,13 @@ export function singleImage(fieldName: string) {
         next(createApiError("An image file is required", 400, "INVALID_UPLOAD"));
         return;
       }
-      next();
+      void readFile(req.file.path).then((buffer) => {
+        const jpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+        const png = buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+        const webp = buffer.subarray(0, 4).toString("ascii") === "RIFF" && buffer.subarray(8, 12).toString("ascii") === "WEBP";
+        if (!jpeg && !png && !webp) return unlink(req.file!.path).catch(() => undefined).then(() => { throw createApiError("Uploaded file content is not a supported image", 400, "INVALID_UPLOAD"); });
+        next();
+      }).catch(next);
     });
   };
 }

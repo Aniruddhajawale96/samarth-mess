@@ -57,6 +57,7 @@ const envSchema = z
     PORT: z.coerce.number().int().positive().default(4000),
     API_URL: z.string().url().default("http://localhost:4000"),
     FRONTEND_URL: z.string().url().default("http://localhost:3000"),
+    REDIS_URL: z.string().url().default("redis://127.0.0.1:6379"),
 
     // ── Database ─────────────────────────────────────────────────────────────
     DATABASE_URL: z
@@ -162,6 +163,10 @@ export const config = {
     port: env.PORT,
     apiUrl: env.API_URL,
     frontendUrl: env.FRONTEND_URL,
+  },
+
+  redis: {
+    url: env.REDIS_URL,
   },
 
   database: {

@@ -1791,12 +1791,12 @@ Do not move every API operation into a queue.
 ### Validation
 
 ```text
-[ ] Queue starts
-[ ] Worker starts
-[ ] Job can be created
-[ ] Job succeeds
-[ ] Failed jobs are observable
-[ ] Retry behavior is bounded
+[x] Queue starts
+[x] Worker starts
+[x] Job can be created
+[x] Job succeeds
+[x] Failed jobs are observable
+[x] Retry behavior is bounded
 ```
 
 ### Suggested commit
@@ -1827,10 +1827,10 @@ Make the MVP safe to operate with normal external/API failures.
 ### Validation
 
 ```text
-[ ] Duplicate requests do not create duplicate business records
-[ ] External provider failures are surfaced/logged
-[ ] Core state does not become inconsistent
-[ ] Error responses remain predictable
+[x] Duplicate requests do not create duplicate business records
+[x] External provider failures are surfaced/logged
+[x] Core state does not become inconsistent
+[x] Error responses remain predictable
 ```
 
 ### Suggested commit
@@ -1864,11 +1864,11 @@ Harden the production MVP.
 ### Validation
 
 ```text
-[ ] Secrets are not committed
-[ ] Protected routes are actually protected
-[ ] Cross-role access is rejected
-[ ] Webhooks are verified
-[ ] Sensitive values are not present in logs
+[x] Secrets are not committed
+[x] Protected routes are actually protected
+[x] Cross-role access is rejected
+[x] Webhooks are verified
+[x] Sensitive values are not present in logs
 ```
 
 ### Suggested commit
@@ -2254,9 +2254,9 @@ Use this section as the quick status overview.
 [x] Commit 35 — Admin Foundation
 [x] Commit 36 — Notifications Foundation
 [x] Commit 37 — Audit and Operational Activity
-[ ] Commit 38 — Background Job Foundation
-[ ] Commit 39 — Error Handling and Reliability Hardening
-[ ] Commit 40 — Security Hardening
+[x] Commit 38 — Background Job Foundation
+[x] Commit 39 — Error Handling and Reliability Hardening
+[x] Commit 40 — Security Hardening
 [ ] Commit 41 — CI Pipeline
 [ ] Commit 42 — CD and Environment Deployment
 [ ] Commit 43 — Dockerized Application Runtime
