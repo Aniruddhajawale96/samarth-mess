@@ -7,6 +7,7 @@ import { authenticate } from "../middleware/authenticate.js";
 import { requireRole } from "../middleware/authorize.js";
 import { createApiError } from "../middleware/errorHandler.js";
 import { validate } from "../middleware/validate.js";
+import { recordAudit } from "../lib/audit.js";
 
 export const attendanceRouter: ExpressRouter = Router();
 
@@ -80,6 +81,7 @@ attendanceRouter.post("/owner/attendance/manual", authenticate, requireRole("OWN
       }
       return records;
     });
+    for (const record of saved) await recordAudit({ actorId: req.user.id, actorRole: "OWNER", action: "ATTENDANCE_CHANGED", entityType: "ATTENDANCE", entityId: record.id, metadata: { userId: record.userId, messId: record.messId, date: record.date, mealType: record.mealType, status: record.status, method: record.method } });
     res.status(201).json({ success: true, data: { date: input.date, items: saved }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
@@ -93,6 +95,7 @@ attendanceRouter.post("/owner/attendance/qr", authenticate, requireRole("OWNER")
     if (user.status !== "ACTIVE") { next(createApiError("User account is disabled", 403, "USER_DISABLED")); return; }
     if (!await activeSubscription(user.id, input.messId, input.date)) { next(createApiError("Customer does not have an active subscription", 403, "ACTIVE_SUBSCRIPTION_REQUIRED")); return; }
     const record = await upsertAttendance({ userId: user.id, messId: input.messId, date: input.date, mealType: input.mealType, status: "PRESENT", method: "QR", markedBy: req.user.id });
+    await recordAudit({ actorId: req.user.id, actorRole: "OWNER", action: "ATTENDANCE_CHANGED", entityType: "ATTENDANCE", entityId: record.id, metadata: { userId: user.id, messId: input.messId, date: input.date, mealType: input.mealType, status: record.status, method: record.method } });
     res.status(201).json({ success: true, data: { user, attendance: record }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });

@@ -28,6 +28,8 @@ import { attendanceRouter } from "./routes/attendance.js";
 import { historyRouter } from "./routes/history.js";
 import { ownerDashboardRouter } from "./routes/ownerDashboard.js";
 import { customerRouter } from "./routes/customers.js";
+import { adminRouter } from "./routes/admin.js";
+import { notificationRouter } from "./routes/notifications.js";
 import path from "node:path";
 
 export function createApp(): Express {
@@ -75,6 +77,8 @@ export function createApp(): Express {
   app.use(historyRouter);
   app.use(ownerDashboardRouter);
   app.use(customerRouter);
+  app.use(adminRouter);
+  app.use(notificationRouter);
 
   // Future versioned routes will be mounted here:
   // app.use("/api/v1", v1Router);

@@ -8,6 +8,7 @@ import { requireRole } from "../middleware/authorize.js";
 import { createApiError } from "../middleware/errorHandler.js";
 import { validate } from "../middleware/validate.js";
 import { canSkip } from "../lib/booking.js";
+import { recordAudit } from "../lib/audit.js";
 
 export const bookingRouter: ExpressRouter = Router();
 
@@ -38,6 +39,7 @@ bookingRouter.post("/bookings", authenticate, requireRole("USER"), validate(Book
       target: [mealBookings.userId, mealBookings.date, mealBookings.mealType],
       set: { status: input.status, messId: input.messId, updatedAt: new Date() }
     }).returning();
+    await recordAudit({ actorId: req.user.id, actorRole: "USER", action: "BOOKING_CHANGED", entityType: "MEAL_BOOKING", entityId: booking.id, metadata: { status: booking.status, messId: booking.messId, date: booking.date, mealType: booking.mealType } });
     res.status(201).json({ success: true, data: { booking }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
@@ -55,6 +57,7 @@ bookingRouter.patch("/bookings/:bookingId", authenticate, requireRole("USER"), v
       if (!canSkip(booking.date, booking.mealType, mess?.skipCutoffMinutes ?? 120)) { next(createApiError("This meal can no longer be skipped", 409, "SKIP_CUTOFF_PASSED")); return; }
     }
     const [updated] = await db.update(mealBookings).set({ status: (req.body as { status: "BOOKED" | "SKIPPED" | "CANCELLED" }).status, updatedAt: new Date() }).where(eq(mealBookings.id, booking.id)).returning();
+    await recordAudit({ actorId: req.user.id, actorRole: "USER", action: "BOOKING_CHANGED", entityType: "MEAL_BOOKING", entityId: updated.id, metadata: { from: booking.status, status: updated.status } });
     res.json({ success: true, data: { booking: updated }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
@@ -77,6 +80,7 @@ bookingRouter.post("/extra-meals", authenticate, requireRole("USER"), validate(E
       target: [mealBookings.userId, mealBookings.date, mealBookings.mealType],
       set: { status: "EXTRA", messId: input.messId, updatedAt: new Date() }
     }).returning();
+    await recordAudit({ actorId: req.user.id, actorRole: "USER", action: "BOOKING_CHANGED", entityType: "MEAL_BOOKING", entityId: booking.id, metadata: { status: booking.status, messId: booking.messId, date: booking.date, mealType: booking.mealType } });
     res.status(201).json({ success: true, data: { booking }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });

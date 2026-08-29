@@ -7,13 +7,15 @@ import { mealBookings } from "./mealBookings";
 import { attendance } from "./attendance";
 import { payments } from "./payments";
 import { invoices } from "./invoices";
+import { notificationAttempts } from "./notificationAttempts";
 
 export const usersRelations = relations(users, ({ many }) => ({
   ownedMesses: many(messes),
   subscriptions: many(subscriptions),
   mealBookings: many(mealBookings),
   attendanceRecords: many(attendance),
-  payments: many(payments)
+  payments: many(payments),
+  notificationAttempts: many(notificationAttempts)
 }));
 
 export const messesRelations = relations(messes, ({ one, many }) => ({
@@ -104,5 +106,12 @@ export const invoicesRelations = relations(invoices, ({ one }) => ({
   payment: one(payments, {
     fields: [invoices.paymentId],
     references: [payments.id]
+  })
+}));
+
+export const notificationAttemptsRelations = relations(notificationAttempts, ({ one }) => ({
+  recipientUser: one(users, {
+    fields: [notificationAttempts.recipientUserId],
+    references: [users.id]
   })
 }));

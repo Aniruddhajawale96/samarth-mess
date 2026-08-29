@@ -43,6 +43,13 @@
       "when": 1788000298070,
       "tag": "0005_equal_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788017946698,
+      "tag": "0006_notification_attempts",
+      "breakpoints": true
     }
   ]
 }

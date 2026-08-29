@@ -1685,11 +1685,11 @@ Create the minimum admin interface required to operate the platform.
 ### Validation
 
 ```text
-[ ] Only admins can access admin routes
-[ ] User list works
-[ ] Owner list works
-[ ] Disable/enable works
-[ ] Important actions are audited
+[x] Only admins can access admin routes
+[x] User list works
+[x] Owner list works
+[x] Disable/enable works
+[x] Important actions are audited
 ```
 
 ### Suggested commit
@@ -1725,9 +1725,9 @@ Use a provider-agnostic notification service.
 ### Validation
 
 ```text
-[ ] Core events create notification attempts
-[ ] Notification failures do not corrupt core business state
-[ ] Notification events can be logged
+[x] Core events create notification attempts
+[x] Notification failures do not corrupt core business state
+[x] Notification events can be logged
 ```
 
 ### Suggested commit
@@ -2251,8 +2251,8 @@ Use this section as the quick status overview.
 [x] Commit 32 — Owner Customer Management
 [x] Commit 33 — User Dashboard
 [x] Commit 34 — Owner Menu and Attendance UX Integration
-[ ] Commit 35 — Admin Foundation
-[ ] Commit 36 — Notifications Foundation
+[x] Commit 35 — Admin Foundation
+[x] Commit 36 — Notifications Foundation
 [ ] Commit 37 — Audit and Operational Activity
 [ ] Commit 38 — Background Job Foundation
 [ ] Commit 39 — Error Handling and Reliability Hardening

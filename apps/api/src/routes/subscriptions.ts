@@ -1,12 +1,14 @@
 import { Router, type Request, type Response, type Router as ExpressRouter } from "express";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { db, messes, payments, subscriptions } from "@samarth-mess/db";
+import { db, messes, payments, subscriptions, users } from "@samarth-mess/db";
 import { MessParamsSchema, SubscriptionOptionsSchema } from "@samarth-mess/validation";
 import { createApiError } from "../middleware/errorHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireRole } from "../middleware/authorize.js";
 import { validate } from "../middleware/validate.js";
+import { notify } from "../lib/notifications.js";
+import { recordAudit } from "../lib/audit.js";
 
 export const subscriptionRouter: ExpressRouter = Router();
 
@@ -33,6 +35,9 @@ subscriptionRouter.post("/messes/:messId/subscriptions", authenticate, requireRo
       const [payment] = await tx.insert(payments).values({ id: randomUUID(), userId: req.user.id, messId, subscriptionId: subscription.id, provider: "RAZORPAY", amount: mess.monthlyPrice, currency: "INR", status: "PENDING" }).returning();
       return { subscription, payment };
     });
+    const [owner] = await db.select({ id: users.id, phone: users.phone, email: users.email }).from(users).where(eq(users.id, mess.ownerId)).limit(1);
+    await recordAudit({ actorId: req.user.id, actorRole: "USER", action: "SUBSCRIPTION_REQUESTED", entityType: "SUBSCRIPTION", entityId: result.subscription.id, metadata: { messId } });
+    if (owner) void notify({ event: "NEW_SUBSCRIPTION_REQUEST", recipientUserId: owner.id, recipient: owner.email ?? owner.phone, payload: { subscriptionId: result.subscription.id, messId: mess.id } });
     res.status(201).json({ success: true, data: { subscription: result.subscription, paymentIntent: { id: result.payment.id, amount: result.payment.amount, currency: result.payment.currency, status: result.payment.status, provider: result.payment.provider } }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });

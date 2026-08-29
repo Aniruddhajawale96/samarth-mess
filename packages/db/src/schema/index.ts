@@ -9,4 +9,5 @@ export * from "./payments";
 export * from "./paymentWebhookEvents";
 export * from "./invoices";
 export * from "./auditEvents";
+export * from "./notificationAttempts";
 export * from "./relations";

@@ -6,6 +6,8 @@ import { authenticate } from "../middleware/authenticate.js";
 import { requireRole } from "../middleware/authorize.js";
 import { createApiError } from "../middleware/errorHandler.js";
 import { validate } from "../middleware/validate.js";
+import { notify } from "../lib/notifications.js";
+import { recordAudit } from "../lib/audit.js";
 
 export const approvalRouter: ExpressRouter = Router();
 
@@ -35,6 +37,8 @@ approvalRouter.post("/owner/subscriptions/:subscriptionId/approve", authenticate
     if (!row) { next(createApiError("Subscription not found", 404, "NOT_FOUND")); return; }
     if (row.subscription.status !== "PENDING_APPROVAL") { next(createApiError("Subscription is not awaiting approval", 409, "INVALID_SUBSCRIPTION_STATE")); return; }
     const [subscription] = await db.update(subscriptions).set({ status: "ACTIVE", startDate: new Date(), updatedAt: new Date() }).where(and(eq(subscriptions.id, row.subscription.id), eq(subscriptions.status, "PENDING_APPROVAL"))).returning();
+    void notify({ event: "SUBSCRIPTION_APPROVED", recipientUserId: row.user.id, recipient: row.user.email ?? row.user.phone, payload: { subscriptionId: subscription.id, messId: row.mess.id } });
+    await recordAudit({ actorId: req.user.id, actorRole: "OWNER", action: "SUBSCRIPTION_APPROVED", entityType: "SUBSCRIPTION", entityId: subscription.id, metadata: { userId: row.user.id, messId: row.mess.id } });
     res.json({ success: true, data: { subscription }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
@@ -45,6 +49,8 @@ approvalRouter.post("/owner/subscriptions/:subscriptionId/reject", authenticate,
     if (!row) { next(createApiError("Subscription not found", 404, "NOT_FOUND")); return; }
     if (row.subscription.status !== "PENDING_APPROVAL") { next(createApiError("Subscription is not awaiting approval", 409, "INVALID_SUBSCRIPTION_STATE")); return; }
     const [subscription] = await db.update(subscriptions).set({ status: "REJECTED", updatedAt: new Date() }).where(and(eq(subscriptions.id, row.subscription.id), eq(subscriptions.status, "PENDING_APPROVAL"))).returning();
+    void notify({ event: "SUBSCRIPTION_REJECTED", recipientUserId: row.user.id, recipient: row.user.email ?? row.user.phone, payload: { subscriptionId: subscription.id, messId: row.mess.id } });
+    await recordAudit({ actorId: req.user.id, actorRole: "OWNER", action: "SUBSCRIPTION_REJECTED", entityType: "SUBSCRIPTION", entityId: subscription.id, metadata: { userId: row.user.id, messId: row.mess.id } });
     res.json({ success: true, data: { subscription }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
