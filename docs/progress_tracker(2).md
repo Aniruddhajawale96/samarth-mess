@@ -272,10 +272,10 @@ Do not create unnecessary services yet.
 ### Validation
 
 ```text
-[ ] Web starts locally
-[ ] API starts locally
-[ ] Both build successfully
-[ ] Turbo can run both applications
+[x] Web starts locally
+[x] API starts locally
+[x] Both build successfully
+[x] Turbo can run both applications
 ```
 
 ### Suggested commit
@@ -2217,7 +2217,7 @@ Use this section as the quick status overview.
 
 ```text
 [x] Commit 00 — Repository and Monorepo Foundation
-[ ] Commit 01 — Application Skeleton
+[x] Commit 01 — Application Skeleton
 [ ] Commit 02 — Shared Package Foundation
 [ ] Commit 03 — Database Foundation
 [ ] Commit 04 — Core Database Schema: Identity and Mess
