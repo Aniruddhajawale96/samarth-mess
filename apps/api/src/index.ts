@@ -1,46 +1,23 @@
 /**
  * apps/api/src/index.ts
  *
- * API entry point.
- * Config is imported first so validation runs at startup and fails fast
- * before any other code runs.
+ * Entry point — loads config (fail-fast validation), then starts the server.
  */
 
-// Config must be loaded first — it validates env and exits on failure.
+// Config must be imported first — validates env and exits on failure.
 import { config } from "@samarth-mess/config";
+import { createApp } from "./app.js";
+import { logger } from "./lib/logger.js";
 
-import express, { type Express, type Request, type Response } from "express";
-import cors from "cors";
-
-const app: Express = express();
-
-app.use(cors({ origin: config.server.frontendUrl }));
-app.use(express.json());
-
-app.get("/health", (_req: Request, res: Response) => {
-  res.json({
-    status: "ok",
-    service: "samarth-mess-api",
-    env: config.nodeEnv,
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get("/api/v1/health", (_req: Request, res: Response) => {
-  res.json({
-    status: "ok",
-    service: "samarth-mess-api",
-    version: "v1",
-    env: config.nodeEnv,
-    timestamp: new Date().toISOString(),
-  });
-});
+const app = createApp();
 
 if (config.nodeEnv !== "test") {
   app.listen(config.server.port, () => {
-    console.log(
-      `[api] Samarth Mess API listening at http://localhost:${config.server.port}`
-    );
+    logger.info("server_started", {
+      port: config.server.port,
+      env: config.nodeEnv,
+      apiUrl: config.server.apiUrl,
+    });
   });
 }
 

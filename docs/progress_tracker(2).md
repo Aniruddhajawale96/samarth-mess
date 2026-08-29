@@ -696,11 +696,11 @@ Recommended prefix:
 ### Validation
 
 ```text
-[ ] GET /health works
-[ ] GET /api/v1/health works
-[ ] Errors use one consistent JSON shape
-[ ] Request ID is available
-[ ] Typecheck/build succeeds
+[x] GET /health works
+[x] GET /api/v1/health works
+[x] Errors use one consistent JSON shape
+[x] Request ID is available
+[x] Typecheck/build succeeds
 ```
 
 ### Suggested commit
