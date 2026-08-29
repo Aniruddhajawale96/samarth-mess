@@ -17,6 +17,8 @@ import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { accessRouter } from "./routes/access.js";
+import { messRouter } from "./routes/messes.js";
+import path from "node:path";
 
 export function createApp(): Express {
   const app = express();
@@ -41,11 +43,13 @@ export function createApp(): Express {
 
   // ── Structured request logging ─────────────────────────────────────────────
   app.use(requestLoggerMiddleware);
+  app.use("/uploads", express.static(path.resolve("uploads")));
 
   // ── Routes ─────────────────────────────────────────────────────────────────
   app.use(healthRouter);
   app.use(authRouter);
   app.use(accessRouter);
+  app.use(messRouter);
 
   // Future versioned routes will be mounted here:
   // app.use("/api/v1", v1Router);

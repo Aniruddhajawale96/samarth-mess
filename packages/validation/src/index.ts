@@ -4,6 +4,7 @@ export const UserRoleSchema = z.enum(["USER", "OWNER", "ADMIN"]);
 export const PublicRegistrationRoleSchema = z.enum(["USER", "OWNER"]).default("USER");
 export const UserTypeSchema = z.enum(["STUDENT", "PROFESSIONAL"]);
 export const AccountStatusSchema = z.enum(["ACTIVE", "DISABLED"]);
+export const MessStatusSchema = z.enum(["ACTIVE", "INACTIVE", "PENDING_APPROVAL"]);
 export const MealTypeSchema = z.enum(["BREAKFAST", "LUNCH", "DINNER"]);
 export const AttendanceStatusSchema = z.enum(["PRESENT", "ABSENT", "EXTRA"]);
 export const AttendanceMethodSchema = z.enum(["QR", "MANUAL"]);
@@ -46,6 +47,7 @@ const MessFields = {
 };
 export const MessCreateSchema = z.object(MessFields).strict();
 export const MessUpdateSchema = z.object(MessFields).partial().strict().refine((value) => Object.keys(value).length > 0);
+export const MessStatusUpdateSchema = z.object({ status: MessStatusSchema }).strict();
 
 export const MenuItemSchema = z.object({
   mealType: MealTypeSchema,

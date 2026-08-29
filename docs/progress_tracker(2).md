@@ -859,11 +859,11 @@ Complete basic user profile management.
 ### Validation
 
 ```text
-[ ] User can update own profile
-[ ] User cannot modify another user
-[ ] Photo upload works
-[ ] Photo URL is persisted
-[ ] Invalid upload is rejected
+[x] User can update own profile
+[x] User cannot modify another user
+[x] Photo upload works
+[x] Photo URL is persisted
+[x] Invalid upload is rejected
 ```
 
 ### Suggested commit
@@ -894,11 +894,11 @@ Allow an owner to create and manage the mess used by the MVP.
 ### Validation
 
 ```text
-[ ] Owner can create mess
-[ ] Owner can edit own mess
-[ ] Owner cannot edit another owner's mess
-[ ] User can only see available messes
-[ ] Disabled mess cannot accept subscriptions
+[x] Owner can create mess
+[x] Owner can edit own mess
+[x] Owner cannot edit another owner's mess
+[x] User can only see available messes
+[x] Disabled mess cannot accept subscriptions
 ```
 
 ### Suggested commit
@@ -935,10 +935,10 @@ Do not build advanced recommendation/ranking logic.
 ### Validation
 
 ```text
-[ ] User can list active messes
-[ ] User can open a mess
-[ ] Disabled messes are excluded
-[ ] Mess details render correctly
+[x] User can list active messes
+[x] User can open a mess
+[x] Disabled messes are excluded
+[x] Mess details render correctly
 ```
 
 ### Suggested commit
@@ -2228,9 +2228,9 @@ Use this section as the quick status overview.
 [x] Commit 09 — Shared Validation Layer
 [x] Commit 10 — Authentication
 [x] Commit 11 — Role-Based Authorization
-[ ] Commit 12 — User Profile and Profile Photo
-[ ] Commit 13 — Mess Management for Owners
-[ ] Commit 14 — Mess Discovery and Details
+[x] Commit 12 — User Profile and Profile Photo
+[x] Commit 13 — Mess Management for Owners
+[x] Commit 14 — Mess Discovery and Details
 [ ] Commit 15 — Owner Menu Management
 [ ] Commit 16 — User Menu Viewing
 [ ] Commit 17 — Subscription Creation
