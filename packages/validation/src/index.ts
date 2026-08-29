@@ -127,6 +127,14 @@ export const HistoryQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20)
 }).strict();
+export const OwnerCustomerQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  search: z.string().trim().max(100).optional(),
+  status: AccountStatusSchema.optional()
+}).strict();
+export const CustomerStatusSchema = z.object({ status: AccountStatusSchema }).strict();
+export const UserParamsSchema = z.object({ userId: IdSchema }).strict();
 export const PaymentWebhookSchema = z.object({
   eventId: z.string().trim().min(1).max(255),
   event: z.enum(["payment.captured", "payment.failed"]),

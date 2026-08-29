@@ -1536,10 +1536,10 @@ Give the mess owner a useful daily operating dashboard.
 ### Validation
 
 ```text
-[ ] Dashboard loads real backend data
-[ ] Values respect owner/mess scope
-[ ] Empty states work
-[ ] Loading/error states work
+[x] Dashboard loads real backend data
+[x] Values respect owner/mess scope
+[x] Empty states work
+[x] Loading/error states work
 ```
 
 ### Suggested commit
@@ -1568,11 +1568,11 @@ Allow owners to manage their customer list.
 ### Validation
 
 ```text
-[ ] Owner can list own customers
-[ ] Search works
-[ ] Status filtering works
-[ ] Disable works
-[ ] Disabled customer cannot create new bookings
+[x] Owner can list own customers
+[x] Search works
+[x] Status filtering works
+[x] Disable works
+[x] Disabled customer cannot create new bookings
 ```
 
 ### Suggested commit
@@ -2247,8 +2247,8 @@ Use this section as the quick status overview.
 [x] Commit 28 — Invoice Generation
 [x] Commit 29 — WhatsApp Invoice Delivery
 [x] Commit 30 — User History
-[ ] Commit 31 — Owner Dashboard
-[ ] Commit 32 — Owner Customer Management
+[x] Commit 31 — Owner Dashboard
+[x] Commit 32 — Owner Customer Management
 [ ] Commit 33 — User Dashboard
 [ ] Commit 34 — Owner Menu and Attendance UX Integration
 [ ] Commit 35 — Admin Foundation
