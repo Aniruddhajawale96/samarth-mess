@@ -89,6 +89,24 @@ export const PaymentIdentifierSchema = z.object({
   providerOrderId: z.string().trim().min(1).max(255).optional()
 }).strict().refine((value) => value.provider === "CASH" || value.providerPaymentId || value.providerOrderId,
   "A provider payment or order identifier is required");
+export const PaymentInitiationSchema = z.object({ subscriptionId: IdSchema }).strict();
+export const PaymentVerificationSchema = z.object({
+  providerPaymentId: z.string().trim().min(1).max(255),
+  providerOrderId: z.string().trim().min(1).max(255),
+  signature: z.string().trim().min(1).max(255)
+}).strict();
+export const PaymentParamsSchema = z.object({ paymentId: IdSchema }).strict();
+export const PaymentWebhookSchema = z.object({
+  eventId: z.string().trim().min(1).max(255),
+  event: z.enum(["payment.captured", "payment.failed"]),
+  payment: z.object({
+    id: z.string().trim().min(1).max(255),
+    orderId: z.string().trim().min(1).max(255).optional(),
+    status: z.enum(["captured", "failed"]),
+    amount: z.number().int().nonnegative().optional()
+  }).strict()
+}).strict();
+export const SubscriptionParamsSchema = z.object({ subscriptionId: IdSchema }).strict();
 
 export const PaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

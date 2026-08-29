@@ -1080,11 +1080,11 @@ A frontend callback alone must never be treated as payment truth.
 ### Validation
 
 ```text
-[ ] Payment can be initiated
-[ ] Payment success is verified server-side
-[ ] Failed payment is persisted correctly
-[ ] Duplicate provider events do not duplicate payment
-[ ] Subscription does not activate automatically
+[x] Payment can be initiated
+[x] Payment success is verified server-side
+[x] Failed payment is persisted correctly
+[x] Duplicate provider events do not duplicate payment
+[x] Subscription does not activate automatically
 ```
 
 ### Suggested commit
@@ -1112,11 +1112,11 @@ Make payment processing reliable enough for production use.
 ### Validation
 
 ```text
-[ ] Valid webhook accepted
-[ ] Invalid signature rejected
-[ ] Duplicate webhook is idempotent
-[ ] Payment state updates correctly
-[ ] Subscription approval state updates only once
+[x] Valid webhook accepted
+[x] Invalid signature rejected
+[x] Duplicate webhook is idempotent
+[x] Payment state updates correctly
+[x] Subscription approval state updates only once
 ```
 
 ### Suggested commit
@@ -1157,11 +1157,11 @@ PENDING_APPROVAL → REJECTED
 ### Validation
 
 ```text
-[ ] Owner can see pending requests for own mess
-[ ] Owner cannot approve another owner's subscription
-[ ] Approve activates subscription
-[ ] Reject changes state correctly
-[ ] User can see current approval state
+[x] Owner can see pending requests for own mess
+[x] Owner cannot approve another owner's subscription
+[x] Approve activates subscription
+[x] Reject changes state correctly
+[x] User can see current approval state
 ```
 
 ### Suggested commit
@@ -2234,9 +2234,9 @@ Use this section as the quick status overview.
 [x] Commit 15 — Owner Menu Management
 [x] Commit 16 — User Menu Viewing
 [x] Commit 17 — Subscription Creation
-[ ] Commit 18 — Payment Integration
-[ ] Commit 19 — Payment Webhooks and Idempotency
-[ ] Commit 20 — Owner Subscription Approval
+[x] Commit 18 — Payment Integration
+[x] Commit 19 — Payment Webhooks and Idempotency
+[x] Commit 20 — Owner Subscription Approval
 [ ] Commit 21 — Meal Booking
 [ ] Commit 22 — Meal Skip Cutoff
 [ ] Commit 23 — Extra Meals

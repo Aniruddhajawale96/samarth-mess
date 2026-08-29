@@ -6,6 +6,7 @@ export * from "./menus";
 export * from "./mealBookings";
 export * from "./attendance";
 export * from "./payments";
+export * from "./paymentWebhookEvents";
 export * from "./invoices";
 export * from "./auditEvents";
 export * from "./relations";

@@ -20,6 +20,8 @@ import { accessRouter } from "./routes/access.js";
 import { messRouter } from "./routes/messes.js";
 import { menuRouter } from "./routes/menus.js";
 import { subscriptionRouter } from "./routes/subscriptions.js";
+import { paymentRouter } from "./routes/payments.js";
+import { approvalRouter } from "./routes/approvals.js";
 import path from "node:path";
 
 export function createApp(): Express {
@@ -37,7 +39,12 @@ export function createApp(): Express {
   );
 
   // ── Body parsing ───────────────────────────────────────────────────────────
-  app.use(express.json({ limit: "1mb" }));
+  app.use(express.json({
+    limit: "1mb",
+    verify: (req, _res, buffer) => {
+      (req as RequestWithRawBody).rawBody = Buffer.from(buffer);
+    }
+  }));
   app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
   // ── Request ID ─────────────────────────────────────────────────────────────
@@ -54,6 +61,8 @@ export function createApp(): Express {
   app.use(messRouter);
   app.use(menuRouter);
   app.use(subscriptionRouter);
+  app.use(paymentRouter);
+  app.use(approvalRouter);
 
   // Future versioned routes will be mounted here:
   // app.use("/api/v1", v1Router);
@@ -65,4 +74,8 @@ export function createApp(): Express {
   app.use(errorHandler);
 
   return app;
+}
+
+interface RequestWithRawBody extends express.Request {
+  rawBody?: Buffer;
 }
