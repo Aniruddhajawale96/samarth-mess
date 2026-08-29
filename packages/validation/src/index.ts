@@ -52,7 +52,9 @@ export const MessStatusUpdateSchema = z.object({ status: MessStatusSchema }).str
 export const MenuItemSchema = z.object({
   mealType: MealTypeSchema,
   name: z.string().trim().min(1).max(150),
-  description: z.string().trim().max(1000).nullable().optional()
+  description: z.string().trim().max(1000).nullable().optional(),
+  image: z.string().url().nullable().optional(),
+  displayOrder: z.number().int().min(0).max(1000).default(0)
 }).strict();
 export const MenuCreateSchema = z.object({
   messId: IdSchema,
@@ -61,7 +63,11 @@ export const MenuCreateSchema = z.object({
   items: z.array(MenuItemSchema).min(1).max(20)
 }).strict();
 export const MenuUpdateSchema = MenuCreateSchema.partial().extend({ items: z.array(MenuItemSchema).min(1).max(20).optional() }).strict();
+export const MenuDateQuerySchema = z.object({ date: DateSchema.optional() }).strict();
+export const MenuParamsSchema = z.object({ menuId: IdSchema }).strict();
+export const MessParamsSchema = z.object({ messId: IdSchema }).strict();
 
+export const SubscriptionOptionsSchema = z.object({ autoRenew: z.boolean().default(false) }).strict();
 export const SubscriptionRequestSchema = z.object({ messId: IdSchema, autoRenew: z.boolean().default(false) }).strict();
 export const BookingSchema = z.object({
   messId: IdSchema,

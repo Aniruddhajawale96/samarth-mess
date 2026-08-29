@@ -971,11 +971,11 @@ Allow owners to create and publish menus.
 ### Validation
 
 ```text
-[ ] Owner can create menu
-[ ] Owner can edit own menu
-[ ] Draft menu is not public
-[ ] Published menu is visible to users
-[ ] Menu history is preserved
+[x] Owner can create menu
+[x] Owner can edit own menu
+[x] Draft menu is not public
+[x] Published menu is visible to users
+[x] Menu history is preserved
 ```
 
 ### Suggested commit
@@ -1004,10 +1004,10 @@ Allow users to browse daily and date-based menus.
 ### Validation
 
 ```text
-[ ] User can view today's menu
-[ ] User can change date
-[ ] Only published menus are visible
-[ ] Empty-menu state is handled
+[x] User can view today's menu
+[x] User can change date
+[x] Only published menus are visible
+[x] Empty-menu state is handled
 ```
 
 ### Suggested commit
@@ -1044,10 +1044,10 @@ Subscription = PENDING_APPROVAL
 ### Validation
 
 ```text
-[ ] User can request subscription
-[ ] Invalid/disabled mess is rejected
-[ ] Duplicate subscription is handled
-[ ] Subscription starts in correct state
+[x] User can request subscription
+[x] Invalid/disabled mess is rejected
+[x] Duplicate subscription is handled
+[x] Subscription starts in correct state
 ```
 
 ### Suggested commit
@@ -2231,9 +2231,9 @@ Use this section as the quick status overview.
 [x] Commit 12 — User Profile and Profile Photo
 [x] Commit 13 — Mess Management for Owners
 [x] Commit 14 — Mess Discovery and Details
-[ ] Commit 15 — Owner Menu Management
-[ ] Commit 16 — User Menu Viewing
-[ ] Commit 17 — Subscription Creation
+[x] Commit 15 — Owner Menu Management
+[x] Commit 16 — User Menu Viewing
+[x] Commit 17 — Subscription Creation
 [ ] Commit 18 — Payment Integration
 [ ] Commit 19 — Payment Webhooks and Idempotency
 [ ] Commit 20 — Owner Subscription Approval

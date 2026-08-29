@@ -18,6 +18,8 @@ import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { accessRouter } from "./routes/access.js";
 import { messRouter } from "./routes/messes.js";
+import { menuRouter } from "./routes/menus.js";
+import { subscriptionRouter } from "./routes/subscriptions.js";
 import path from "node:path";
 
 export function createApp(): Express {
@@ -50,6 +52,8 @@ export function createApp(): Express {
   app.use(authRouter);
   app.use(accessRouter);
   app.use(messRouter);
+  app.use(menuRouter);
+  app.use(subscriptionRouter);
 
   // Future versioned routes will be mounted here:
   // app.use("/api/v1", v1Router);

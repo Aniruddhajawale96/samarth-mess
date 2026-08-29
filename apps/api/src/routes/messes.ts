@@ -1,8 +1,8 @@
 import { Router, type Request, type Response, type Router as ExpressRouter } from "express";
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, ilike } from "drizzle-orm";
+import { and, asc, eq, gte, ilike, lt } from "drizzle-orm";
 import { db, menuItems, menus, messes, users } from "@samarth-mess/db";
-import { MessCreateSchema, MessStatusUpdateSchema, MessUpdateSchema, PaginationSchema } from "@samarth-mess/validation";
+import { MenuDateQuerySchema, MessCreateSchema, MessStatusUpdateSchema, MessUpdateSchema, PaginationSchema } from "@samarth-mess/validation";
 import { createApiError } from "../middleware/errorHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireMessOwner, requireRole } from "../middleware/authorize.js";
@@ -29,7 +29,9 @@ function publicMess(mess: typeof messes.$inferSelect) {
   };
 }
 
-async function publishedMenuPreview(messId: string) {
+export async function publishedMenuPreview(messId: string, date = new Date().toISOString().slice(0, 10)) {
+  const start = new Date(`${date}T00:00:00.000Z`);
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
   const rows = await db.select({
     menuId: menus.id,
     mealType: menuItems.mealType,
@@ -38,10 +40,12 @@ async function publishedMenuPreview(messId: string) {
     displayOrder: menuItems.displayOrder
   }).from(menus)
     .leftJoin(menuItems, eq(menuItems.menuId, menus.id))
-    .where(and(eq(menus.messId, messId), eq(menus.status, "PUBLISHED")))
+    .where(and(eq(menus.messId, messId), eq(menus.status, "PUBLISHED"),
+      gte(menus.startDate, start), lt(menus.startDate, end)))
     .orderBy(asc(menuItems.displayOrder));
 
-  return rows.map(({ menuId, displayOrder, ...item }) => ({ menuId, ...item, displayOrder }));
+  return rows.filter((row) => row.itemName !== null)
+    .map(({ menuId, displayOrder, ...item }) => ({ menuId, ...item, displayOrder }));
 }
 
 messRouter.get("/messes", validate(PaginationSchema, "query"), async (req: Request, res: Response, next) => {
@@ -54,19 +58,21 @@ messRouter.get("/messes", validate(PaginationSchema, "query"), async (req: Reque
   } catch (error) { next(error); }
 });
 
-messRouter.get("/messes/:messId", async (req: Request, res: Response, next) => {
+messRouter.get("/messes/:messId", validate(MenuDateQuerySchema, "query"), async (req: Request, res: Response, next) => {
   try {
     const [mess] = await db.select().from(messes).where(and(eq(messes.id, req.params.messId), eq(messes.status, "ACTIVE"))).limit(1);
     if (!mess) { next(createApiError("Mess not found", 404, "NOT_FOUND")); return; }
-    res.json({ success: true, data: { mess: publicMess(mess), menuPreview: await publishedMenuPreview(mess.id) }, timestamp: new Date().toISOString() });
+    const date = (req.query as { date?: string }).date;
+    res.json({ success: true, data: { mess: publicMess(mess), date: date ?? new Date().toISOString().slice(0, 10), menuPreview: await publishedMenuPreview(mess.id, date) }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
 
-messRouter.get("/messes/:messId/menu", async (req: Request, res: Response, next) => {
+messRouter.get("/messes/:messId/menu", validate(MenuDateQuerySchema, "query"), async (req: Request, res: Response, next) => {
   try {
     const [mess] = await db.select({ id: messes.id }).from(messes).where(and(eq(messes.id, req.params.messId), eq(messes.status, "ACTIVE"))).limit(1);
     if (!mess) { next(createApiError("Mess not found", 404, "NOT_FOUND")); return; }
-    res.json({ success: true, data: { items: await publishedMenuPreview(mess.id) }, timestamp: new Date().toISOString() });
+    const date = (req.query as { date?: string }).date;
+    res.json({ success: true, data: { date: date ?? new Date().toISOString().slice(0, 10), items: await publishedMenuPreview(mess.id, date) }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
 
