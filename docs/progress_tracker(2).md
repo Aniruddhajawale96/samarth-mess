@@ -1999,11 +1999,11 @@ Local development should remain simple.
 ### Validation
 
 ```text
-[ ] Docker builds
-[ ] Containers start
-[ ] API can reach database
-[ ] Worker can reach Redis
-[ ] Web can reach API
+[x] Docker builds
+[x] Containers start
+[x] API can reach database
+[x] Worker can reach Redis
+[x] Web can reach API
 ```
 
 ### Suggested commit
@@ -2223,8 +2223,8 @@ Use this section as the quick status overview.
 [x] Commit 04 — Core Database Schema: Identity and Mess
 [x] Commit 05 — Core Database Schema: Subscription and Menu
 [x] Commit 06 — Core Database Schema: Booking, Attendance, Payments, Invoice, Audit
-[ ] Commit 07 — Configuration and Environment Validation
-[ ] Commit 08 — Express API Foundation
+[x] Commit 07 — Configuration and Environment Validation
+[x] Commit 08 — Express API Foundation
 [x] Commit 09 — Shared Validation Layer
 [x] Commit 10 — Authentication
 [x] Commit 11 — Role-Based Authorization
@@ -2259,7 +2259,7 @@ Use this section as the quick status overview.
 [x] Commit 40 — Security Hardening
 [x] Commit 41 — CI Pipeline
 [x] Commit 42 — CD and Environment Deployment
-[ ] Commit 43 — Dockerized Application Runtime
+[x] Commit 43 — Dockerized Application Runtime
 [x] Commit 44 — Testing the Core Business Journey
 [x] Commit 45 — Production Seed / Demo Data
 [x] Commit 46 — MVP UX Polish

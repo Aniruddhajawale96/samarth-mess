@@ -46,6 +46,8 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${WEB_API_URL:-http://localhost:4000}
     env_file: ${COMPOSE_ENV_FILE:-.env}
+    environment:
+      PORT: 3000
     depends_on:
       api:
         condition: service_started
