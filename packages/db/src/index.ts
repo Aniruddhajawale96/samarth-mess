@@ -6,7 +6,7 @@ import * as schema from "./schema/index";
 const { Pool } = pg;
 
 export const pool = new Pool({
-  connectionString: config.databaseUrl
+  connectionString: config.database.url
 });
 
 export const db = drizzle(pool, { schema });

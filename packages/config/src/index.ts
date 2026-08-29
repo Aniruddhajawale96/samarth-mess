@@ -1,44 +1,175 @@
-import dotenv from "dotenv";
+/**
+ * packages/config/src/index.ts
+ *
+ * Validated application configuration using Zod.
+ *
+ * Rules:
+ *  - Fails fast on missing / invalid required configuration.
+ *  - Never silently falls back to insecure values in production.
+ *  - Never logs secrets.
+ *
+ * Usage:
+ *   import { config } from "@samarth-mess/config";
+ */
 
-dotenv.config();
+import { z } from "zod";
 
-export interface AppConfig {
-  nodeEnv: string;
-  port: number;
-  apiUrl: string;
-  frontendUrl: string;
-  databaseUrl: string;
-  jwtSecret: string;
-  jwtExpiresIn: string;
-  razorpayKeyId?: string;
-  razorpayKeySecret?: string;
-  whatsappApiKey?: string;
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const INSECURE_SECRETS = [
+  "development_secret_key_change_in_production",
+  "super_secret_jwt_key_change_in_production",
+  "REPLACE_WITH_A_RANDOM_32_PLUS_CHARACTER_SECRET",
+  "changeme",
+  "secret",
+];
+
+function notInsecureInProduction(value: string) {
+  const nodeEnv = process.env["NODE_ENV"] ?? "development";
+  if (nodeEnv === "production" && INSECURE_SECRETS.includes(value)) {
+    return false;
+  }
+  return true;
 }
 
-export function loadConfig(): AppConfig {
-  const nodeEnv = process.env.NODE_ENV || "development";
-  const port = parseInt(process.env.PORT || "4000", 10);
-  const apiUrl = process.env.API_URL || `http://localhost:${port}`;
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-  const databaseUrl =
-    process.env.DATABASE_URL ||
-    "postgres://postgres:postgres@localhost:5432/samarth_mess";
-  const jwtSecret =
-    process.env.JWT_SECRET || "development_secret_key_change_in_production";
-  const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "7d";
+// ---------------------------------------------------------------------------
+// Schema
+// ---------------------------------------------------------------------------
 
-  return {
-    nodeEnv,
-    port,
-    apiUrl,
-    frontendUrl,
-    databaseUrl,
-    jwtSecret,
-    jwtExpiresIn,
-    razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-    razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
-    whatsappApiKey: process.env.WHATSAPP_API_KEY
-  };
+const envSchema = z
+  .object({
+    // ── Runtime ─────────────────────────────────────────────────────────────
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
+
+    // ── Server ──────────────────────────────────────────────────────────────
+    PORT: z.coerce.number().int().positive().default(4000),
+    API_URL: z.string().url().default("http://localhost:4000"),
+    FRONTEND_URL: z.string().url().default("http://localhost:3000"),
+
+    // ── Database ─────────────────────────────────────────────────────────────
+    DATABASE_URL: z
+      .string()
+      .min(1, "DATABASE_URL is required")
+      .refine(
+        (v) =>
+          v.startsWith("postgres://") || v.startsWith("postgresql://"),
+        { message: "DATABASE_URL must be a valid PostgreSQL connection string" }
+      ),
+
+    // ── Auth ─────────────────────────────────────────────────────────────────
+    JWT_SECRET: z
+      .string()
+      .min(32, "JWT_SECRET must be at least 32 characters")
+      .refine(notInsecureInProduction, {
+        message: "JWT_SECRET must not use a placeholder value in production",
+      }),
+
+    JWT_EXPIRES_IN: z.string().min(1).default("7d"),
+
+    // ── Session / Cookie ─────────────────────────────────────────────────────
+    COOKIE_SECRET: z
+      .string()
+      .min(32, "COOKIE_SECRET must be at least 32 characters")
+      .refine(notInsecureInProduction, {
+        message: "COOKIE_SECRET must not use a placeholder value in production",
+      })
+      .optional(),
+
+    // ── Payment (optional) ───────────────────────────────────────────────────
+    RAZORPAY_KEY_ID: z.string().optional(),
+    RAZORPAY_KEY_SECRET: z.string().optional(),
+
+    // ── WhatsApp (optional) ──────────────────────────────────────────────────
+    WHATSAPP_API_KEY: z.string().optional(),
+    WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
+
+    // ── Storage (optional) ───────────────────────────────────────────────────
+    STORAGE_BUCKET: z.string().optional(),
+    STORAGE_REGION: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Extra cross-field production rules
+    if (data.NODE_ENV === "production") {
+      if (!data.COOKIE_SECRET) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "COOKIE_SECRET is required in production",
+          path: ["COOKIE_SECRET"],
+        });
+      }
+    }
+  });
+
+// ---------------------------------------------------------------------------
+// Parse & export
+// ---------------------------------------------------------------------------
+
+function parseEnv() {
+  const result = envSchema.safeParse(process.env);
+
+  if (!result.success) {
+    const formatted = result.error.errors
+      .map((e) => `  • ${e.path.join(".")}: ${e.message}`)
+      .join("\n");
+
+    // Intentionally NOT logging process.env to avoid leaking secrets.
+    console.error(
+      `\n[config] ❌ Invalid environment configuration:\n${formatted}\n\n` +
+        `Fix the above values (see .env.example) and restart the application.\n`
+    );
+
+    process.exit(1);
+  }
+
+  return result.data;
 }
 
-export const config = loadConfig();
+const env = parseEnv();
+
+// ---------------------------------------------------------------------------
+// Typed config object (camelCase)
+// ---------------------------------------------------------------------------
+
+export const config = {
+  nodeEnv: env.NODE_ENV,
+  isProduction: env.NODE_ENV === "production",
+  isDevelopment: env.NODE_ENV === "development",
+  isTest: env.NODE_ENV === "test",
+
+  server: {
+    port: env.PORT,
+    apiUrl: env.API_URL,
+    frontendUrl: env.FRONTEND_URL,
+  },
+
+  database: {
+    url: env.DATABASE_URL,
+  },
+
+  auth: {
+    jwtSecret: env.JWT_SECRET,
+    jwtExpiresIn: env.JWT_EXPIRES_IN,
+    cookieSecret: env.COOKIE_SECRET,
+  },
+
+  payment: {
+    razorpayKeyId: env.RAZORPAY_KEY_ID,
+    razorpayKeySecret: env.RAZORPAY_KEY_SECRET,
+  },
+
+  whatsapp: {
+    apiKey: env.WHATSAPP_API_KEY,
+    phoneNumberId: env.WHATSAPP_PHONE_NUMBER_ID,
+  },
+
+  storage: {
+    bucket: env.STORAGE_BUCKET,
+    region: env.STORAGE_REGION,
+  },
+} as const;
+
+export type Config = typeof config;

@@ -654,10 +654,10 @@ Validate at startup:
 ### Validation
 
 ```text
-[ ] Missing required config fails clearly
-[ ] Valid config starts application
-[ ] Secrets are not printed in logs
-[ ] `.env.example` is current
+[x] Missing required config fails clearly
+[x] Valid config starts application
+[x] Secrets are not printed in logs
+[x] `.env.example` is current
 ```
 
 ### Suggested commit

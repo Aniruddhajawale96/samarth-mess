@@ -19,7 +19,8 @@
     "lint": "echo \"@samarth-mess/config: lint ok\""
   },
   "dependencies": {
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",
