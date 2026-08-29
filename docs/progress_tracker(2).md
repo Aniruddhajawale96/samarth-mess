@@ -1757,10 +1757,10 @@ Make important MVP operations traceable.
 ### Validation
 
 ```text
-[ ] Important operations create audit records
-[ ] Audit records contain actor/action/entity
-[ ] Audit data is not editable through normal APIs
-[ ] Admin can inspect basic audit activity
+[x] Important operations create audit records
+[x] Audit records contain actor/action/entity
+[x] Audit data is not editable through normal APIs
+[x] Admin can inspect basic audit activity
 ```
 
 ### Suggested commit
@@ -2253,7 +2253,7 @@ Use this section as the quick status overview.
 [x] Commit 34 — Owner Menu and Attendance UX Integration
 [x] Commit 35 — Admin Foundation
 [x] Commit 36 — Notifications Foundation
-[ ] Commit 37 — Audit and Operational Activity
+[x] Commit 37 — Audit and Operational Activity
 [ ] Commit 38 — Background Job Foundation
 [ ] Commit 39 — Error Handling and Reliability Hardening
 [ ] Commit 40 — Security Hardening

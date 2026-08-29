@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type Router as ExpressRouter } from "express";
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
-import { db, messes, users } from "@samarth-mess/db";
+import { auditEvents, db, messes, users } from "@samarth-mess/db";
 import { AdminMessStatusSchema, AdminUserQuerySchema, CustomerStatusSchema, UserParamsSchema } from "@samarth-mess/validation";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireRole } from "../middleware/authorize.js";
@@ -48,8 +48,16 @@ adminRouter.patch("/admin/users/:userId/status", authenticate, requireRole("ADMI
   try {
     const [user] = await db.update(users).set({ status: (req.body as { status: "ACTIVE" | "DISABLED" }).status, updatedAt: new Date() }).where(and(eq(users.id, req.params.userId), or(eq(users.role, "USER"), eq(users.role, "OWNER")))).returning({ id: users.id, name: users.name, role: users.role, status: users.status });
     if (!user) { next(createApiError("Account not found", 404, "NOT_FOUND")); return; }
-    await recordAudit({ actorId: req.user.id, actorRole: "ADMIN", action: `ACCOUNT_${user.status}`, entityType: "USER", entityId: user.id });
+    await recordAudit({ actorId: req.user.id, actorRole: "ADMIN", action: user.role === "OWNER" ? `OWNER_${user.status === "ACTIVE" ? "APPROVED" : "DISABLED"}` : `ACCOUNT_${user.status}`, entityType: "USER", entityId: user.id });
     res.json({ success: true, data: { user }, timestamp: new Date().toISOString() });
+  } catch (error) { next(error); }
+});
+
+adminRouter.get("/admin/audit", authenticate, requireRole("ADMIN"), async (req: Request, res: Response, next) => {
+  try {
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
+    const items = await db.select().from(auditEvents).orderBy(desc(auditEvents.createdAt)).limit(limit);
+    res.json({ success: true, data: { items, limit }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
 

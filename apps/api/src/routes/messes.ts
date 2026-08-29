@@ -8,6 +8,7 @@ import { authenticate } from "../middleware/authenticate.js";
 import { requireMessOwner, requireRole } from "../middleware/authorize.js";
 import { validate } from "../middleware/validate.js";
 import { singleImage } from "../middleware/upload.js";
+import { recordAudit } from "../lib/audit.js";
 
 export const messRouter: ExpressRouter = Router();
 
@@ -104,6 +105,7 @@ messRouter.patch("/owner/messes/:messId", authenticate, requireRole("OWNER"), re
 messRouter.patch("/owner/messes/:messId/status", authenticate, requireRole("OWNER"), requireMessOwner, validate(MessStatusUpdateSchema), async (req: Request, res: Response, next) => {
   try {
     const [mess] = await db.update(messes).set({ status: (req.body as { status: "ACTIVE" | "INACTIVE" | "PENDING_APPROVAL" }).status, updatedAt: new Date() }).where(eq(messes.id, req.params.messId)).returning();
+    await recordAudit({ actorId: req.user.id, actorRole: "OWNER", action: `MESS_${mess.status}`, entityType: "MESS", entityId: mess.id });
     res.json({ success: true, data: { mess }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });

@@ -6,6 +6,7 @@ import { authenticate } from "../middleware/authenticate.js";
 import { requireRole } from "../middleware/authorize.js";
 import { createApiError } from "../middleware/errorHandler.js";
 import { validate } from "../middleware/validate.js";
+import { recordAudit } from "../lib/audit.js";
 
 export const customerRouter: ExpressRouter = Router();
 
@@ -51,6 +52,7 @@ customerRouter.patch("/owner/customers/:userId/status", authenticate, requireRol
     const row = await ownerCustomer(req.user.id, req.params.userId);
     if (!row) { next(createApiError("Customer not found", 404, "NOT_FOUND")); return; }
     const [user] = await db.update(users).set({ status: (req.body as { status: "ACTIVE" | "DISABLED" }).status, updatedAt: new Date() }).where(eq(users.id, req.params.userId)).returning();
+    await recordAudit({ actorId: req.user.id, actorRole: "OWNER", action: `ACCOUNT_${user.status}`, entityType: "USER", entityId: user.id });
     res.json({ success: true, data: { user: publicCustomer(user) }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });

@@ -11,6 +11,7 @@ import { validate } from "../middleware/validate.js";
 import { ensureInvoice } from "../lib/invoice.js";
 import { deliverInvoice } from "../lib/whatsapp.js";
 import { notify } from "../lib/notifications.js";
+import { recordAudit } from "../lib/audit.js";
 
 export const paymentRouter: ExpressRouter = Router();
 
@@ -87,6 +88,7 @@ paymentRouter.post("/payments/:paymentId/verify", authenticate, requireRole("USE
     }
     const updated = await markPaymentSuccessful(payment.id, input.providerPaymentId, input.providerOrderId);
     if (updated) {
+      await recordAudit({ actorId: req.user.id, actorRole: "USER", action: "PAYMENT_STATUS_CHANGED", entityType: "PAYMENT", entityId: updated.id, metadata: { status: updated.status, providerPaymentId: updated.providerPaymentId } });
       const [invoice] = await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.paymentId, updated.id)).limit(1);
       void notify({ event: "PAYMENT_SUCCESSFUL", recipientUserId: updated.userId, payload: { paymentId: updated.id, amount: updated.amount, currency: updated.currency } });
       if (invoice) void notify({ event: "INVOICE_AVAILABLE", recipientUserId: updated.userId, payload: { paymentId: updated.id, invoiceId: invoice.id } });
@@ -108,27 +110,30 @@ paymentRouter.post("/webhooks/payment", validate(PaymentWebhookSchema), async (r
     const input = req.body as { eventId: string; event: "payment.captured" | "payment.failed"; payment: { id: string; orderId?: string; status: "captured" | "failed"; amount?: number } };
     const [existingEvent] = await db.select({ id: paymentWebhookEvents.id }).from(paymentWebhookEvents).where(eq(paymentWebhookEvents.providerEventId, input.eventId)).limit(1);
     if (existingEvent) { res.json({ success: true, data: { duplicate: true }, timestamp: new Date().toISOString() }); return; }
-    let successfulPaymentId: string | undefined;
+    let changedPayment: { id: string; status: "SUCCESS" | "FAILED" } | undefined;
     await db.transaction(async (tx) => {
       await tx.insert(paymentWebhookEvents).values({ id: randomUUID(), providerEventId: input.eventId, providerPaymentId: input.payment.id, event: input.event, payload: input as unknown as Record<string, unknown> });
       const [payment] = await tx.select().from(payments).where(or(eq(payments.providerPaymentId, input.payment.id), input.payment.orderId ? eq(payments.providerOrderId, input.payment.orderId) : undefined)).limit(1);
       if (!payment) return;
       if (input.payment.amount !== undefined && input.payment.amount !== payment.amount) throw createApiError("Webhook payment amount does not match", 400, "PAYMENT_AMOUNT_MISMATCH");
       const status = input.event === "payment.captured" && input.payment.status === "captured" ? "SUCCESS" : "FAILED";
+      changedPayment = { id: payment.id, status };
       await tx.update(payments).set({ providerPaymentId: input.payment.id, providerOrderId: input.payment.orderId ?? payment.providerOrderId, status, paidAt: status === "SUCCESS" ? new Date() : null, updatedAt: new Date() }).where(eq(payments.id, payment.id));
       if (status === "SUCCESS" && payment.subscriptionId) {
         await tx.update(subscriptions).set({ status: "PENDING_APPROVAL", updatedAt: new Date() }).where(and(eq(subscriptions.id, payment.subscriptionId), eq(subscriptions.status, "PENDING_PAYMENT")));
       }
       if (status === "SUCCESS") {
         await ensureInvoice(tx, payment.id);
-        successfulPaymentId = payment.id;
       }
     });
-    if (successfulPaymentId) {
-      const [invoice] = await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.paymentId, successfulPaymentId)).limit(1);
-      const [successfulPayment] = await db.select({ userId: payments.userId, amount: payments.amount, currency: payments.currency }).from(payments).where(eq(payments.id, successfulPaymentId)).limit(1);
-      if (successfulPayment) void notify({ event: "PAYMENT_SUCCESSFUL", recipientUserId: successfulPayment.userId, payload: { paymentId: successfulPaymentId, amount: successfulPayment.amount, currency: successfulPayment.currency } });
-      if (successfulPayment && invoice) void notify({ event: "INVOICE_AVAILABLE", recipientUserId: successfulPayment.userId, payload: { paymentId: successfulPaymentId, invoiceId: invoice.id } });
+    if (changedPayment) {
+      await recordAudit({ action: "PAYMENT_STATUS_CHANGED", entityType: "PAYMENT", entityId: changedPayment.id, metadata: { status: changedPayment.status, source: "WEBHOOK" } });
+    }
+    if (changedPayment?.status === "SUCCESS") {
+      const [invoice] = await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.paymentId, changedPayment.id)).limit(1);
+      const [successfulPayment] = await db.select({ userId: payments.userId, amount: payments.amount, currency: payments.currency }).from(payments).where(eq(payments.id, changedPayment.id)).limit(1);
+      if (successfulPayment) void notify({ event: "PAYMENT_SUCCESSFUL", recipientUserId: successfulPayment.userId, payload: { paymentId: changedPayment.id, amount: successfulPayment.amount, currency: successfulPayment.currency } });
+      if (successfulPayment && invoice) void notify({ event: "INVOICE_AVAILABLE", recipientUserId: successfulPayment.userId, payload: { paymentId: changedPayment.id, invoiceId: invoice.id } });
       if (invoice) await deliverInvoice(invoice.id);
     }
     res.json({ success: true, data: { processed: true }, timestamp: new Date().toISOString() });
