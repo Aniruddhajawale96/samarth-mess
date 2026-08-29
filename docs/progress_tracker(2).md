@@ -2047,11 +2047,11 @@ Register
 ### Validation
 
 ```text
-[ ] Core journey passes
-[ ] Authorization tests pass
-[ ] Payment idempotency test passes
-[ ] Booking rules pass
-[ ] Attendance rules pass
+[x] Core journey passes
+[x] Authorization tests pass
+[x] Payment idempotency test passes
+[x] Booking rules pass
+[x] Attendance rules pass
 ```
 
 ### Suggested commit
@@ -2086,10 +2086,10 @@ Provide safe non-production seed data that makes the system immediately testable
 ### Validation
 
 ```text
-[ ] Fresh database can be seeded
-[ ] Demo login data works where intended
-[ ] Seed is idempotent or safely repeatable
-[ ] No sensitive data is present
+[x] Fresh database can be seeded
+[x] Demo login data works where intended
+[x] Seed is idempotent or safely repeatable
+[x] No sensitive data is present
 ```
 
 ### Suggested commit
@@ -2260,8 +2260,8 @@ Use this section as the quick status overview.
 [x] Commit 41 — CI Pipeline
 [x] Commit 42 — CD and Environment Deployment
 [ ] Commit 43 — Dockerized Application Runtime
-[ ] Commit 44 — Testing the Core Business Journey
-[ ] Commit 45 — Production Seed / Demo Data
+[x] Commit 44 — Testing the Core Business Journey
+[x] Commit 45 — Production Seed / Demo Data
 [ ] Commit 46 — MVP UX Polish
 [ ] Commit 47 — MVP Release Readiness
 ```

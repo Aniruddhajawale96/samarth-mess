@@ -16,7 +16,8 @@ async function activeSubscriptionForDate(userId: string, messId: string, date: s
   const [subscription] = await db.select().from(subscriptions).where(and(eq(subscriptions.userId, userId), eq(subscriptions.messId, messId), eq(subscriptions.status, "ACTIVE"))).limit(1);
   if (!subscription) return undefined;
   const day = new Date(`${date}T00:00:00.000Z`);
-  return (!subscription.startDate || subscription.startDate <= day) && (!subscription.endDate || subscription.endDate >= day) ? subscription : undefined;
+  const dayEnd = new Date(day.getTime() + 24 * 60 * 60 * 1000);
+  return (!subscription.startDate || subscription.startDate < dayEnd) && (!subscription.endDate || subscription.endDate >= day) ? subscription : undefined;
 }
 
 async function validateBookingAccess(userId: string, messId: string, date: string) {

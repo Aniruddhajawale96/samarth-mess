@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type Router as ExpressRouter } from "express";
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, gte, isNull, lte, or } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
 import { attendance, db, messes, subscriptions, users } from "@samarth-mess/db";
 import { AttendanceBatchSchema, AttendanceQuerySchema, QrAttendanceSchema } from "@samarth-mess/validation";
 import { authenticate } from "../middleware/authenticate.js";
@@ -23,11 +23,12 @@ async function ownerMess(ownerId: string, messId: string) {
 
 async function activeSubscription(userId: string, messId: string, date: string) {
   const day = dateValue(date);
+  const dayEnd = new Date(day.getTime() + 24 * 60 * 60 * 1000);
   const [subscription] = await db.select().from(subscriptions).where(and(
     eq(subscriptions.userId, userId),
     eq(subscriptions.messId, messId),
     eq(subscriptions.status, "ACTIVE"),
-    or(isNull(subscriptions.startDate), lte(subscriptions.startDate, day)),
+    or(isNull(subscriptions.startDate), lt(subscriptions.startDate, dayEnd)),
     or(isNull(subscriptions.endDate), gte(subscriptions.endDate, day))
   )).limit(1);
   return subscription;
