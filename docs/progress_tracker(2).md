@@ -317,10 +317,10 @@ Keep these packages small.
 ### Validation
 
 ```text
-[ ] Packages resolve correctly
-[ ] Web and API can import shared packages
-[ ] Typecheck succeeds
-[ ] Turbo build succeeds
+[x] Packages resolve correctly
+[x] Web and API can import shared packages
+[x] Typecheck succeeds
+[x] Turbo build succeeds
 ```
 
 ### Suggested commit
@@ -350,10 +350,10 @@ Set up PostgreSQL and Drizzle ORM.
 ### Validation
 
 ```text
-[ ] PostgreSQL starts locally
-[ ] Application connects successfully
-[ ] Drizzle commands work
-[ ] A test migration can be generated/applied
+[x] PostgreSQL starts locally
+[x] Application connects successfully
+[x] Drizzle commands work
+[x] A test migration can be generated/applied
 ```
 
 ### Suggested commit
@@ -425,10 +425,10 @@ DISABLED
 ### Validation
 
 ```text
-[ ] Migrations apply
-[ ] Foreign keys work
-[ ] Required uniqueness constraints exist
-[ ] Schema typechecks
+[x] Migrations apply
+[x] Foreign keys work
+[x] Required uniqueness constraints exist
+[x] Schema typechecks
 ```
 
 ### Suggested commit
@@ -490,11 +490,11 @@ Include:
 ### Validation
 
 ```text
-[ ] Subscription belongs to user and mess
-[ ] Menu belongs to mess
-[ ] Menu items belong to menu
-[ ] Appropriate indexes/constraints exist
-[ ] Migration applies cleanly
+[x] Subscription belongs to user and mess
+[x] Menu belongs to mess
+[x] Menu items belong to menu
+[x] Appropriate indexes/constraints exist
+[x] Migration applies cleanly
 ```
 
 ### Suggested commit
@@ -2218,10 +2218,10 @@ Use this section as the quick status overview.
 ```text
 [x] Commit 00 — Repository and Monorepo Foundation
 [x] Commit 01 — Application Skeleton
-[ ] Commit 02 — Shared Package Foundation
-[ ] Commit 03 — Database Foundation
-[ ] Commit 04 — Core Database Schema: Identity and Mess
-[ ] Commit 05 — Core Database Schema: Subscription and Menu
+[x] Commit 02 — Shared Package Foundation
+[x] Commit 03 — Database Foundation
+[x] Commit 04 — Core Database Schema: Identity and Mess
+[x] Commit 05 — Core Database Schema: Subscription and Menu
 [ ] Commit 06 — Core Database Schema: Booking, Attendance, Payments, Invoice, Audit
 [ ] Commit 07 — Configuration and Environment Validation
 [ ] Commit 08 — Express API Foundation

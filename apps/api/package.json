@@ -12,6 +12,11 @@
     "lint": "echo \"@samarth-mess/api: lint ok\""
   },
   "dependencies": {
+    "@samarth-mess/config": "workspace:*",
+    "@samarth-mess/db": "workspace:*",
+    "@samarth-mess/shared": "workspace:*",
+    "@samarth-mess/types": "workspace:*",
+    "@samarth-mess/validation": "workspace:*",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2"

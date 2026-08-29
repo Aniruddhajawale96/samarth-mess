@@ -10,6 +10,9 @@
     "lint": "echo \"@samarth-mess/web: lint ok\""
   },
   "dependencies": {
+    "@samarth-mess/shared": "workspace:*",
+    "@samarth-mess/types": "workspace:*",
+    "@samarth-mess/validation": "workspace:*",
     "next": "^15.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
