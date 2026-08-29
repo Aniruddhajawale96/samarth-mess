@@ -1,0 +1,1 @@
+ALTER TABLE "messes" ADD COLUMN "skip_cutoff_minutes" integer DEFAULT 120 NOT NULL;

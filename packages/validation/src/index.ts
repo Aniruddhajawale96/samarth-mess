@@ -43,7 +43,8 @@ const MessFields = {
   address: z.string().trim().min(5).max(500),
   contact: PhoneSchema,
   monthlyPrice: z.number().int().nonnegative().max(10_000_000),
-  mealsPerDay: z.number().int().min(1).max(4)
+  mealsPerDay: z.number().int().min(1).max(4),
+  skipCutoffMinutes: z.number().int().min(0).max(1440).default(120)
 };
 export const MessCreateSchema = z.object(MessFields).strict();
 export const MessUpdateSchema = z.object(MessFields).partial().strict().refine((value) => Object.keys(value).length > 0);
@@ -75,6 +76,8 @@ export const BookingSchema = z.object({
   mealType: MealTypeSchema,
   status: z.enum(["BOOKED", "SKIPPED", "EXTRA", "CANCELLED"]).default("BOOKED")
 }).strict();
+export const BookingUpdateSchema = z.object({ status: z.enum(["BOOKED", "SKIPPED", "CANCELLED"]) }).strict();
+export const BookingParamsSchema = z.object({ bookingId: IdSchema }).strict();
 export const AttendanceSchema = z.object({
   userId: IdSchema,
   messId: IdSchema,
@@ -116,6 +119,12 @@ export const PaginationSchema = z.object({
   from: DateSchema.optional(),
   to: DateSchema.optional()
 }).strict().refine((value) => !value.from || !value.to || value.from <= value.to, "from must be before to");
+export const BookingQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  date: DateSchema.optional(),
+  status: z.string().trim().max(50).optional()
+}).strict();
 
 export const VerifyPhoneSchema = z.object({ code: z.string().trim().regex(/^\d{4,8}$/, "Verification code must be numeric") }).strict();
 

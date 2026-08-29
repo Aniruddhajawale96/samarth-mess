@@ -1191,10 +1191,10 @@ Allow active subscribers to book meals.
 ### Validation
 
 ```text
-[ ] Only ACTIVE subscribers can book
-[ ] Booking is tied to date and meal type
-[ ] Duplicate booking is prevented/updated safely
-[ ] Booking history works
+[x] Only ACTIVE subscribers can book
+[x] Booking is tied to date and meal type
+[x] Duplicate booking is prevented/updated safely
+[x] Booking history works
 ```
 
 ### Suggested commit
@@ -1226,10 +1226,10 @@ The backend, not the client clock, is authoritative.
 ### Validation
 
 ```text
-[ ] Skip works before cutoff
-[ ] Skip is rejected after cutoff
-[ ] Time comparison is server-side
-[ ] Existing booking history remains correct
+[x] Skip works before cutoff
+[x] Skip is rejected after cutoff
+[x] Time comparison is server-side
+[x] Existing booking history remains correct
 ```
 
 ### Suggested commit
@@ -2237,8 +2237,8 @@ Use this section as the quick status overview.
 [x] Commit 18 — Payment Integration
 [x] Commit 19 — Payment Webhooks and Idempotency
 [x] Commit 20 — Owner Subscription Approval
-[ ] Commit 21 — Meal Booking
-[ ] Commit 22 — Meal Skip Cutoff
+[x] Commit 21 — Meal Booking
+[x] Commit 22 — Meal Skip Cutoff
 [ ] Commit 23 — Extra Meals
 [ ] Commit 24 — User QR Identity
 [ ] Commit 25 — Manual Attendance
