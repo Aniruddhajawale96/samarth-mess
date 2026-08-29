@@ -1459,11 +1459,11 @@ WhatsApp failure must not change a successful payment back to failed.
 ### Validation
 
 ```text
-[ ] Successful payment triggers invoice delivery
-[ ] Delivery status is stored
-[ ] Provider failure is logged
-[ ] Payment remains successful if WhatsApp fails
-[ ] Duplicate webhook does not send uncontrolled duplicates
+[x] Successful payment triggers invoice delivery
+[x] Delivery status is stored
+[x] Provider failure is logged
+[x] Payment remains successful if WhatsApp fails
+[x] Duplicate webhook does not send uncontrolled duplicates
 ```
 
 ### Suggested commit
@@ -1494,11 +1494,11 @@ Use pagination where necessary.
 ### Validation
 
 ```text
-[ ] User can view booking history
-[ ] User can view attendance history
-[ ] User can view payment history
-[ ] User can view subscription state/history
-[ ] User cannot see another user's history
+[x] User can view booking history
+[x] User can view attendance history
+[x] User can view payment history
+[x] User can view subscription state/history
+[x] User cannot see another user's history
 ```
 
 ### Suggested commit
@@ -2245,8 +2245,8 @@ Use this section as the quick status overview.
 [x] Commit 26 — QR Attendance
 [x] Commit 27 — Payment History and Invoice Access
 [x] Commit 28 — Invoice Generation
-[ ] Commit 29 — WhatsApp Invoice Delivery
-[ ] Commit 30 — User History
+[x] Commit 29 — WhatsApp Invoice Delivery
+[x] Commit 30 — User History
 [ ] Commit 31 — Owner Dashboard
 [ ] Commit 32 — Owner Customer Management
 [ ] Commit 33 — User Dashboard

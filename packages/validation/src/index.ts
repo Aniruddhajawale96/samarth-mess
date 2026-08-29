@@ -123,6 +123,10 @@ export const PaymentQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   status: z.enum(["PENDING", "SUCCESS", "FAILED", "CANCELLED", "REFUNDED"]).optional()
 }).strict();
+export const HistoryQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20)
+}).strict();
 export const PaymentWebhookSchema = z.object({
   eventId: z.string().trim().min(1).max(255),
   event: z.enum(["payment.captured", "payment.failed"]),

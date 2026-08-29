@@ -94,6 +94,7 @@ const envSchema = z
     // ── WhatsApp (optional) ──────────────────────────────────────────────────
     WHATSAPP_API_KEY: z.string().optional().refine(notInsecureInProduction, "WHATSAPP_API_KEY must not use a placeholder in production"),
     WHATSAPP_PHONE_NUMBER_ID: z.string().optional().refine(notInsecureInProduction, "WHATSAPP_PHONE_NUMBER_ID must not use a placeholder in production"),
+    WHATSAPP_API_URL: z.string().url().default("https://graph.facebook.com/v20.0"),
 
     // ── Storage (optional) ───────────────────────────────────────────────────
     STORAGE_BUCKET: z.string().optional(),
@@ -181,6 +182,7 @@ export const config = {
   whatsapp: {
     apiKey: env.WHATSAPP_API_KEY,
     phoneNumberId: env.WHATSAPP_PHONE_NUMBER_ID,
+    apiUrl: env.WHATSAPP_API_URL,
   },
 
   storage: {

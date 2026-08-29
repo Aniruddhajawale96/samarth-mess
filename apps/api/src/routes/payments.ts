@@ -9,6 +9,7 @@ import { requireRole } from "../middleware/authorize.js";
 import { createApiError } from "../middleware/errorHandler.js";
 import { validate } from "../middleware/validate.js";
 import { ensureInvoice } from "../lib/invoice.js";
+import { deliverInvoice } from "../lib/whatsapp.js";
 
 export const paymentRouter: ExpressRouter = Router();
 
@@ -84,6 +85,10 @@ paymentRouter.post("/payments/:paymentId/verify", authenticate, requireRole("USE
       return;
     }
     const updated = await markPaymentSuccessful(payment.id, input.providerPaymentId, input.providerOrderId);
+    if (updated) {
+      const [invoice] = await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.paymentId, updated.id)).limit(1);
+      if (invoice) await deliverInvoice(invoice.id);
+    }
     res.json({ success: true, data: { payment: updated, subscriptionStatus: "PENDING_APPROVAL" }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
@@ -100,6 +105,7 @@ paymentRouter.post("/webhooks/payment", validate(PaymentWebhookSchema), async (r
     const input = req.body as { eventId: string; event: "payment.captured" | "payment.failed"; payment: { id: string; orderId?: string; status: "captured" | "failed"; amount?: number } };
     const [existingEvent] = await db.select({ id: paymentWebhookEvents.id }).from(paymentWebhookEvents).where(eq(paymentWebhookEvents.providerEventId, input.eventId)).limit(1);
     if (existingEvent) { res.json({ success: true, data: { duplicate: true }, timestamp: new Date().toISOString() }); return; }
+    let successfulPaymentId: string | undefined;
     await db.transaction(async (tx) => {
       await tx.insert(paymentWebhookEvents).values({ id: randomUUID(), providerEventId: input.eventId, providerPaymentId: input.payment.id, event: input.event, payload: input as unknown as Record<string, unknown> });
       const [payment] = await tx.select().from(payments).where(or(eq(payments.providerPaymentId, input.payment.id), input.payment.orderId ? eq(payments.providerOrderId, input.payment.orderId) : undefined)).limit(1);
@@ -110,8 +116,15 @@ paymentRouter.post("/webhooks/payment", validate(PaymentWebhookSchema), async (r
       if (status === "SUCCESS" && payment.subscriptionId) {
         await tx.update(subscriptions).set({ status: "PENDING_APPROVAL", updatedAt: new Date() }).where(and(eq(subscriptions.id, payment.subscriptionId), eq(subscriptions.status, "PENDING_PAYMENT")));
       }
-      if (status === "SUCCESS") await ensureInvoice(tx, payment.id);
+      if (status === "SUCCESS") {
+        await ensureInvoice(tx, payment.id);
+        successfulPaymentId = payment.id;
+      }
     });
+    if (successfulPaymentId) {
+      const [invoice] = await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.paymentId, successfulPaymentId)).limit(1);
+      if (invoice) await deliverInvoice(invoice.id);
+    }
     res.json({ success: true, data: { processed: true }, timestamp: new Date().toISOString() });
   } catch (error) {
     if ((error as { code?: string }).code === "23505") { res.json({ success: true, data: { duplicate: true }, timestamp: new Date().toISOString() }); return; }
