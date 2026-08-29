@@ -2,12 +2,13 @@ import { Router, type Request, type Response, type Router as ExpressRouter } fro
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { and, eq, or } from "drizzle-orm";
 import { config } from "@samarth-mess/config";
-import { db, paymentWebhookEvents, payments, subscriptions } from "@samarth-mess/db";
-import { PaymentInitiationSchema, PaymentParamsSchema, PaymentVerificationSchema, PaymentWebhookSchema } from "@samarth-mess/validation";
+import { db, invoices, messes, paymentWebhookEvents, payments, subscriptions } from "@samarth-mess/db";
+import { PaymentInitiationSchema, PaymentParamsSchema, PaymentQuerySchema, PaymentVerificationSchema, PaymentWebhookSchema } from "@samarth-mess/validation";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireRole } from "../middleware/authorize.js";
 import { createApiError } from "../middleware/errorHandler.js";
 import { validate } from "../middleware/validate.js";
+import { ensureInvoice } from "../lib/invoice.js";
 
 export const paymentRouter: ExpressRouter = Router();
 
@@ -25,6 +26,7 @@ async function markPaymentSuccessful(paymentId: string, providerPaymentId: strin
     if (payment.subscriptionId) {
       await tx.update(subscriptions).set({ status: "PENDING_APPROVAL", updatedAt: new Date() }).where(and(eq(subscriptions.id, payment.subscriptionId), eq(subscriptions.status, "PENDING_PAYMENT")));
     }
+    if (payment.status === "SUCCESS") await ensureInvoice(tx, payment.id);
     return payment;
   });
 }
@@ -38,6 +40,37 @@ paymentRouter.post("/payments", authenticate, requireRole("USER"), validate(Paym
     const providerOrderId = payment.providerOrderId ?? `order_${randomUUID().replaceAll("-", "")}`;
     const [updated] = await db.update(payments).set({ providerOrderId, updatedAt: new Date() }).where(eq(payments.id, payment.id)).returning();
     res.status(201).json({ success: true, data: { payment: { id: updated.id, status: updated.status, amount: updated.amount, currency: updated.currency, provider: updated.provider, providerOrderId: updated.providerOrderId }, provider: { keyId: config.payment.razorpayKeyId ?? null, orderId: updated.providerOrderId } }, timestamp: new Date().toISOString() });
+  } catch (error) { next(error); }
+});
+
+paymentRouter.get("/payments", authenticate, requireRole("USER"), validate(PaymentQuerySchema, "query"), async (req: Request, res: Response, next) => {
+  try {
+    const query = req.query as unknown as { page: number; limit: number; status?: "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED" | "REFUNDED" };
+    const filters = [eq(payments.userId, req.user.id)];
+    if (query.status) filters.push(eq(payments.status, query.status));
+    const rows = await db.select({ payment: payments, mess: messes, invoice: invoices }).from(payments)
+      .innerJoin(messes, eq(messes.id, payments.messId)).leftJoin(invoices, eq(invoices.paymentId, payments.id))
+      .where(and(...filters)).orderBy(payments.createdAt).limit(query.limit).offset((query.page - 1) * query.limit);
+    res.json({ success: true, data: { items: rows, page: query.page, limit: query.limit }, timestamp: new Date().toISOString() });
+  } catch (error) { next(error); }
+});
+
+paymentRouter.get("/payments/:paymentId", authenticate, requireRole("USER"), validate(PaymentParamsSchema, "params"), async (req: Request, res: Response, next) => {
+  try {
+    const [row] = await db.select({ payment: payments, mess: messes, invoice: invoices }).from(payments)
+      .innerJoin(messes, eq(messes.id, payments.messId)).leftJoin(invoices, eq(invoices.paymentId, payments.id))
+      .where(and(eq(payments.id, req.params.paymentId), eq(payments.userId, req.user.id))).limit(1);
+    if (!row) { next(createApiError("Payment not found", 404, "NOT_FOUND")); return; }
+    res.json({ success: true, data: row, timestamp: new Date().toISOString() });
+  } catch (error) { next(error); }
+});
+
+paymentRouter.get("/payments/:paymentId/invoice", authenticate, requireRole("USER"), validate(PaymentParamsSchema, "params"), async (req: Request, res: Response, next) => {
+  try {
+    const [invoice] = await db.select({ invoice: invoices }).from(invoices).innerJoin(payments, eq(payments.id, invoices.paymentId))
+      .where(and(eq(invoices.paymentId, req.params.paymentId), eq(payments.userId, req.user.id))).limit(1);
+    if (!invoice?.invoice) { next(createApiError("Invoice is not available", 404, "INVOICE_NOT_FOUND")); return; }
+    res.json({ success: true, data: { invoice: invoice.invoice }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
 });
 
@@ -77,6 +110,7 @@ paymentRouter.post("/webhooks/payment", validate(PaymentWebhookSchema), async (r
       if (status === "SUCCESS" && payment.subscriptionId) {
         await tx.update(subscriptions).set({ status: "PENDING_APPROVAL", updatedAt: new Date() }).where(and(eq(subscriptions.id, payment.subscriptionId), eq(subscriptions.status, "PENDING_PAYMENT")));
       }
+      if (status === "SUCCESS") await ensureInvoice(tx, payment.id);
     });
     res.json({ success: true, data: { processed: true }, timestamp: new Date().toISOString() });
   } catch (error) {

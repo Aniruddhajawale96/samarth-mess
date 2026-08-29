@@ -1391,10 +1391,10 @@ Give users persistent payment history and invoice access.
 ### Validation
 
 ```text
-[ ] User sees own payments only
-[ ] Payment statuses are accurate
-[ ] Invoice can be retrieved
-[ ] Missing invoice is handled safely
+[x] User sees own payments only
+[x] Payment statuses are accurate
+[x] Invoice can be retrieved
+[x] Missing invoice is handled safely
 ```
 
 ### Suggested commit
@@ -1423,10 +1423,10 @@ Generate an application invoice after verified payment.
 ### Validation
 
 ```text
-[ ] Successful payment generates one invoice
-[ ] Duplicate payment event does not create duplicate invoice
-[ ] Invoice can be retrieved
-[ ] Invoice contains correct customer/mess/payment data
+[x] Successful payment generates one invoice
+[x] Duplicate payment event does not create duplicate invoice
+[x] Invoice can be retrieved
+[x] Invoice contains correct customer/mess/payment data
 ```
 
 ### Suggested commit
@@ -2243,8 +2243,8 @@ Use this section as the quick status overview.
 [x] Commit 24 — User QR Identity
 [x] Commit 25 — Manual Attendance
 [x] Commit 26 — QR Attendance
-[ ] Commit 27 — Payment History and Invoice Access
-[ ] Commit 28 — Invoice Generation
+[x] Commit 27 — Payment History and Invoice Access
+[x] Commit 28 — Invoice Generation
 [ ] Commit 29 — WhatsApp Invoice Delivery
 [ ] Commit 30 — User History
 [ ] Commit 31 — Owner Dashboard

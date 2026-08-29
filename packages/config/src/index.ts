@@ -13,6 +13,9 @@
  */
 
 import { z } from "zod";
+import dotenv from "dotenv";
+
+dotenv.config({ path: process.env.DOTENV_CONFIG_PATH ?? ".env" });
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -24,9 +27,14 @@ const INSECURE_SECRETS = [
   "REPLACE_WITH_A_RANDOM_32_PLUS_CHARACTER_SECRET",
   "changeme",
   "secret",
+  "rzp_test_placeholder",
+  "placeholder_secret",
+  "placeholder_api_key",
+  "placeholder_number_id",
 ];
 
-function notInsecureInProduction(value: string) {
+function notInsecureInProduction(value: string | undefined) {
+  if (!value) return true;
   const nodeEnv = process.env["NODE_ENV"] ?? "development";
   if (nodeEnv === "production" && INSECURE_SECRETS.includes(value)) {
     return false;
@@ -80,18 +88,27 @@ const envSchema = z
       .optional(),
 
     // ── Payment (optional) ───────────────────────────────────────────────────
-    RAZORPAY_KEY_ID: z.string().optional(),
-    RAZORPAY_KEY_SECRET: z.string().optional(),
+    RAZORPAY_KEY_ID: z.string().optional().refine(notInsecureInProduction, "RAZORPAY_KEY_ID must not use a placeholder in production"),
+    RAZORPAY_KEY_SECRET: z.string().optional().refine(notInsecureInProduction, "RAZORPAY_KEY_SECRET must not use a placeholder in production"),
 
     // ── WhatsApp (optional) ──────────────────────────────────────────────────
-    WHATSAPP_API_KEY: z.string().optional(),
-    WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
+    WHATSAPP_API_KEY: z.string().optional().refine(notInsecureInProduction, "WHATSAPP_API_KEY must not use a placeholder in production"),
+    WHATSAPP_PHONE_NUMBER_ID: z.string().optional().refine(notInsecureInProduction, "WHATSAPP_PHONE_NUMBER_ID must not use a placeholder in production"),
 
     // ── Storage (optional) ───────────────────────────────────────────────────
     STORAGE_BUCKET: z.string().optional(),
     STORAGE_REGION: z.string().optional(),
   })
   .superRefine((data, ctx) => {
+    if (Boolean(data.RAZORPAY_KEY_ID) !== Boolean(data.RAZORPAY_KEY_SECRET)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Razorpay key ID and secret must be configured together", path: [data.RAZORPAY_KEY_ID ? "RAZORPAY_KEY_SECRET" : "RAZORPAY_KEY_ID"] });
+    }
+    if (Boolean(data.WHATSAPP_API_KEY) !== Boolean(data.WHATSAPP_PHONE_NUMBER_ID)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "WhatsApp API key and phone number ID must be configured together", path: [data.WHATSAPP_API_KEY ? "WHATSAPP_PHONE_NUMBER_ID" : "WHATSAPP_API_KEY"] });
+    }
+    if (Boolean(data.STORAGE_BUCKET) !== Boolean(data.STORAGE_REGION)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Storage bucket and region must be configured together", path: [data.STORAGE_BUCKET ? "STORAGE_REGION" : "STORAGE_BUCKET"] });
+    }
     // Extra cross-field production rules
     if (data.NODE_ENV === "production") {
       if (!data.COOKIE_SECRET) {
