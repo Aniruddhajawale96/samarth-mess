@@ -1,95 +1,64 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+type Data = Record<string, any>;
+type Role = "USER" | "OWNER";
+
+async function api(path: string, token: string, init?: RequestInit) {
+  const response = await fetch(`${API_URL}${path}`, { ...init, headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}), ...(init?.headers ?? {}) } });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error?.message ?? "Request failed");
+  return body.data as Data;
+}
+const today = () => new Date().toISOString().slice(0, 10);
+
+function Status({ value }: { value?: string }) { return <span className={`status status-${value?.toLowerCase() ?? "pending"}`}>{value?.replaceAll("_", " ") ?? "Pending"}</span>; }
+function Empty({ children }: { children: React.ReactNode }) { return <div className="empty">{children}</div>; }
+function Metric({ label, value }: { label: string; value: string }) { return <div className="metric"><span>{label}</span><strong>{value}</strong></div>; }
+function Panel({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) { return <section className="panel"><div className="panel-header"><h2>{title}</h2>{action}</div>{children}</section>; }
+function PageTitle({ title, detail, children }: { title: string; detail?: string; children: React.ReactNode }) { return <><div className="page-title"><div><p className="eyebrow">WORKSPACE</p><h1>{title}</h1>{detail && <p className="muted">{detail}</p>}</div></div>{children}</>; }
+function InlineError({ message, onDismiss }: { message: string; onDismiss: () => void }) { return <div className="error-banner">{message}<button onClick={onDismiss} aria-label="Dismiss">×</button></div>; }
+
+function AuthGate({ token, setToken, onContinue }: { token: string; setToken: (value: string) => void; onContinue: () => void }) {
+  return <main className="auth-shell"><div className="auth-panel"><p className="eyebrow">SAMARTH MESS</p><h1>Workspace access</h1><p className="muted">Use an authenticated API token to open your workspace.</p><label className="field-label" htmlFor="token">Access token</label><input id="token" className="input" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Paste bearer token" type="password" /><button className="button button-primary button-wide" onClick={onContinue}>Open workspace</button><p className="hint">Sign in through the API first, then return here with the issued token.</p></div></main>;
+}
+
+function Shell({ role, view, setView, onLogout, children }: { role: Role; view: string; setView: (view: string) => void; onLogout: () => void; children: React.ReactNode }) {
+  const userNav = [["home", "Home"], ["menu", "Menu"], ["book", "Book meal"], ["payments", "Payments"], ["history", "History"], ["profile", "Profile"]];
+  const ownerNav = [["dashboard", "Dashboard"], ["menu", "Menu"], ["customers", "Customers"], ["approvals", "Approvals"], ["attendance", "Attendance"]];
+  const nav = role === "USER" ? userNav : ownerNav;
+  return <div className="app-shell"><header className="topbar"><div className="brand"><span className="brand-mark">SM</span><span>Samarth Mess</span></div><div className="topbar-actions"><span className="role-label">{role === "OWNER" ? "Owner workspace" : "User workspace"}</span><button className="logout-button" onClick={onLogout}>Log out</button></div></header><div className="layout"><nav className="sidebar">{nav.map(([key, label]) => <button className={`nav-item ${view === key ? "nav-active" : ""}`} key={key} onClick={() => setView(key)}>{label}</button>)}</nav><main className="main-content">{children}</main></div><nav className="mobile-nav">{nav.slice(0, 5).map(([key, label]) => <button className={view === key ? "nav-active" : ""} key={key} onClick={() => setView(key)}>{label}</button>)}</nav></div>;
+}
+
+function UserWorkspace({ token, onLogout }: { token: string; onLogout: () => void }) {
+  const [view, setView] = useState("home"); const [user, setUser] = useState<Data>(); const [subscription, setSubscription] = useState<Data>(); const [menu, setMenu] = useState<Data>(); const [history, setHistory] = useState<Data>(); const [qr, setQr] = useState<Data>(); const [mealType, setMealType] = useState("LUNCH"); const [error, setError] = useState(""); const [message, setMessage] = useState(""); const [loading, setLoading] = useState(true);
+  const mess = subscription?.mess;
+  async function load() { setLoading(true); try { setError(""); const [profile, subscriptions, activity] = await Promise.all([api("/auth/me", token), api("/subscriptions/me", token), api("/users/me/history?limit=5", token)]); const current = subscriptions.items?.[0]; setUser(profile.user); setSubscription(current); setHistory(activity); if (current?.mess?.id) setMenu(await api(`/messes/${current.mess.id}/menu?date=${today()}`, token)); } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load dashboard"); } finally { setLoading(false); } }
+  useEffect(() => { void load(); }, [token]);
+  async function bookMeal(event: FormEvent) { event.preventDefault(); if (!mess?.id) return; try { await api("/bookings", token, { method: "POST", body: JSON.stringify({ messId: mess.id, date: today(), mealType, status: "BOOKED" }) }); setMessage("Meal booked"); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Booking failed"); } }
+  async function showQr() { try { setQr(await api("/users/me/qr", token)); setView("qr"); } catch (cause) { setError(cause instanceof Error ? cause.message : "QR unavailable"); } }
+  if (loading && !user) return <Shell role="USER" view={view} setView={setView} onLogout={onLogout}><div className="loading-state">Loading your workspace...</div></Shell>;
+  if (error && !user) return <Shell role="USER" view={view} setView={setView} onLogout={onLogout}><div className="error-state"><h2>Could not load workspace</h2><p className="muted">{error}</p><button className="button button-secondary" onClick={load}>Try again</button></div></Shell>;
+  return <Shell role="USER" view={view} setView={setView} onLogout={onLogout}>{error && <InlineError message={error} onDismiss={() => setError("")} />}{message && <div className="notice">{message}<button onClick={() => setMessage("")} aria-label="Dismiss">×</button></div>}{view === "home" && <><section className="welcome"><div><p className="eyebrow">TODAY, {today()}</p><h1>Hello, {user?.name?.split(" ")[0] ?? "there"}</h1><p className="muted">{mess?.name ?? "Choose a mess to get started."}</p></div><Status value={subscription?.subscription?.status ?? subscription?.status} /></section><section className="metrics"><Metric label="Subscription" value={subscription?.subscription?.status?.replaceAll("_", " ") ?? "Not started"} /><Metric label="Meals today" value={String(menu?.items?.length ?? 0)} /><Metric label="Recent activity" value={String((history?.bookings?.length ?? 0) + (history?.attendance?.length ?? 0))} /></section><section className="content-grid"><Panel title="Today's menu" action={<button className="text-button" onClick={() => setView("menu")}>View menu →</button>}>{menu?.items?.length ? <div className="menu-list">{menu.items.map((item: Data) => <div className="menu-row" key={`${item.mealType}-${item.itemName}`}><span>{item.mealType}</span><strong>{item.itemName}</strong></div>)}</div> : <Empty>No menu published for today.</Empty>}</Panel><Panel title="Quick actions"><div className="action-grid"><button className="action-button" onClick={() => setView("book")}>Book meal</button><button className="action-button" onClick={showQr}>Show QR</button><button className="action-button" onClick={() => setView("payments")}>Payments</button><button className="action-button" onClick={() => setView("history")}>History</button></div></Panel></section></>}{view === "menu" && <PageTitle title="Today's menu" detail={mess?.name}><Panel title={today()}>{menu?.items?.length ? <div className="menu-list">{menu.items.map((item: Data) => <div className="menu-row menu-row-large" key={`${item.mealType}-${item.itemName}`}><span>{item.mealType}</span><div><strong>{item.itemName}</strong><p className="muted">{item.description || "Prepared fresh by your mess."}</p></div></div>)}</div> : <Empty>No published menu for today.</Empty>}</Panel></PageTitle>}{view === "book" && <PageTitle title="Book a meal" detail={mess?.name}><Panel title={`Booking for ${today()}`}><form className="stack" onSubmit={bookMeal}><label className="field-label" htmlFor="meal">Meal type</label><select id="meal" className="input" value={mealType} onChange={(event) => setMealType(event.target.value)}><option>BREAKFAST</option><option>LUNCH</option><option>DINNER</option></select><button className="button button-primary" type="submit">Confirm booking</button></form></Panel></PageTitle>}{view === "qr" && <PageTitle title="Your QR identity" detail="Show this code at the mess"><Panel title="Attendance QR">{qr ? <div className="qr-box"><img src={qr.qrDataUrl} alt="Your attendance QR" /><code>{qr.token}</code><button className="button button-secondary" onClick={showQr}>Refresh</button></div> : <Empty>QR is not loaded.</Empty>}</Panel></PageTitle>}{view === "payments" && <PageTitle title="Payments" detail="Your payment history"><Panel title="Payment records">{history?.payments?.length ? <div className="record-list">{history.payments.map((row: Data) => <div className="record" key={row.payment.id}><div><strong>{row.mess.name}</strong><p className="muted">{row.payment.currency} {row.payment.amount}</p></div><Status value={row.payment.status} /></div>)}</div> : <Empty>No payments yet.</Empty>}</Panel></PageTitle>}{view === "history" && <PageTitle title="Activity history" detail="Bookings and attendance"><section className="content-grid"><Panel title="Bookings">{history?.bookings?.length ? history.bookings.map((item: Data) => <div className="record" key={item.id}><span>{item.date} · {item.mealType}</span><Status value={item.status} /></div>) : <Empty>No bookings yet.</Empty>}</Panel><Panel title="Attendance">{history?.attendance?.length ? history.attendance.map((item: Data) => <div className="record" key={item.id}><span>{item.date} · {item.mealType}</span><Status value={item.status} /></div>) : <Empty>No attendance records yet.</Empty>}</Panel></section></PageTitle>}{view === "profile" && <PageTitle title="Profile"><Panel title={user?.name}><div className="profile-grid"><span>Phone</span><strong>{user?.phone}</strong><span>Email</span><strong>{user?.email || "Not added"}</strong><span>Account</span><Status value={user?.status} /></div></Panel></PageTitle>}</Shell>;
+}
+
+function OwnerWorkspace({ token, onLogout }: { token: string; onLogout: () => void }) {
+  const [view, setView] = useState("dashboard"); const [dashboard, setDashboard] = useState<Data>(); const [menus, setMenus] = useState<Data[]>([]); const [customers, setCustomers] = useState<Data[]>([]); const [approvals, setApprovals] = useState<Data[]>([]); const [attendance, setAttendance] = useState<Data>(); const [error, setError] = useState(""); const [message, setMessage] = useState(""); const [menuName, setMenuName] = useState(""); const [menuType, setMenuType] = useState("LUNCH"); const [menuDate, setMenuDate] = useState(today()); const [attendanceUser, setAttendanceUser] = useState(""); const [attendanceType, setAttendanceType] = useState("PRESENT");
+  async function load() { try { setError(""); const [dash, menuRows, customerRows, pending, daily] = await Promise.all([api("/owner/dashboard", token), api("/owner/menus", token), api("/owner/customers?limit=100", token), api("/owner/subscriptions/pending", token), api(`/owner/attendance?date=${today()}`, token)]); setDashboard(dash); setMenus(menuRows.items ?? []); setCustomers(customerRows.items ?? []); setApprovals(pending.items ?? []); setAttendance(daily); } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load owner workspace"); } }
+  useEffect(() => { void load(); }, [token]);
+  async function act(path: string, init: RequestInit) { try { await api(path, token, init); setMessage("Saved"); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Action failed"); } }
+  async function createMenu(event: FormEvent) { event.preventDefault(); if (!dashboard?.mess?.id || !menuName) return; await act("/owner/menus", { method: "POST", body: JSON.stringify({ messId: dashboard.mess.id, date: menuDate, status: "DRAFT", items: [{ mealType: menuType, name: menuName, displayOrder: 0 }] }) }); setMenuName(""); }
+  async function saveAttendance(event: FormEvent) { event.preventDefault(); if (!attendanceUser || !attendance?.mess?.id) return; await act("/owner/attendance/manual", { method: "POST", body: JSON.stringify({ messId: attendance.mess.id, date: today(), records: [{ userId: attendanceUser, mealType: "LUNCH", status: attendanceType }] }) }); }
+  return <Shell role="OWNER" view={view} setView={setView} onLogout={onLogout}>{error && <InlineError message={error} onDismiss={() => setError("")} />}{message && <div className="notice">{message}<button onClick={() => setMessage("")} aria-label="Dismiss">×</button></div>}{view === "dashboard" && <PageTitle title="Owner dashboard" detail={dashboard?.mess?.name}><section className="metrics metrics-owner"><Metric label="Customers" value={String(dashboard?.customers?.total ?? "–")} /><Metric label="Active today" value={String(dashboard?.customers?.active ?? "–")} /><Metric label="Pending approvals" value={String(dashboard?.customers?.pendingApprovals ?? "–")} /><Metric label="Revenue" value={`₹${dashboard?.revenue?.successfulAmount ?? "–"}`} /></section><section className="content-grid"><Panel title="Today's operations"><div className="operations"><Metric label="Expected meals" value={String(dashboard?.today?.expectedMeals ?? "–")} /><Metric label="Present" value={String(dashboard?.today?.present ?? "–")} /><Metric label="Absent" value={String(dashboard?.today?.absent ?? "–")} /><Metric label="Extra" value={String(dashboard?.today?.extra ?? "–")} /></div></Panel><Panel title="Primary actions"><div className="action-grid"><button className="action-button" onClick={() => setView("menu")}>Manage menu</button><button className="action-button" onClick={() => setView("approvals")}>Approvals</button><button className="action-button" onClick={() => setView("customers")}>Customers</button><button className="action-button" onClick={() => setView("attendance")}>Attendance</button></div></Panel></section></PageTitle>}{view === "menu" && <PageTitle title="Menu" detail="Create drafts and publish daily meals"><section className="content-grid"><Panel title="Add menu item"><form className="stack" onSubmit={createMenu}><input className="input" value={menuDate} onChange={(event) => setMenuDate(event.target.value)} type="date" required /><select className="input" value={menuType} onChange={(event) => setMenuType(event.target.value)}><option>BREAKFAST</option><option>LUNCH</option><option>DINNER</option></select><input className="input" value={menuName} onChange={(event) => setMenuName(event.target.value)} placeholder="Item name" required /><button className="button button-primary">Save draft</button></form></Panel><Panel title="Menu history">{menus.length ? <div className="record-list">{menus.map((row: Data) => <div className="record" key={row.menu.id}><div><strong>{row.messName}</strong><p className="muted">{row.menu.startDate?.slice(0, 10)}</p></div><div className="row-actions"><Status value={row.menu.status} />{row.menu.status !== "PUBLISHED" && <button className="small-button" onClick={() => act(`/owner/menus/${row.menu.id}/publish`, { method: "POST" })}>Publish</button>}</div></div>)}</div> : <Empty>No menus created yet.</Empty>}</Panel></section></PageTitle>}{view === "customers" && <PageTitle title="Customers" detail="Your mess members"><Panel title={`${customers.length} customers`}>{customers.length ? <div className="record-list">{customers.map((row: Data) => <div className="record" key={row.user.id}><div><strong>{row.user.name}</strong><p className="muted">{row.user.phone} · {row.subscription.status.replaceAll("_", " ")}</p></div><div className="row-actions"><Status value={row.user.status} /><button className="small-button" onClick={() => act(`/owner/customers/${row.user.id}/status`, { method: "PATCH", body: JSON.stringify({ status: row.user.status === "ACTIVE" ? "DISABLED" : "ACTIVE" }) })}>{row.user.status === "ACTIVE" ? "Disable" : "Enable"}</button></div></div>)}</div> : <Empty>No customers yet.</Empty>}</Panel></PageTitle>}{view === "approvals" && <PageTitle title="Approvals" detail="Subscription requests"><Panel title="Pending requests">{approvals.length ? <div className="record-list">{approvals.map((row: Data) => <div className="record" key={row.subscription.id}><div><strong>{row.user.name}</strong><p className="muted">{row.user.phone}</p></div><div className="row-actions"><button className="small-button" onClick={() => act(`/owner/subscriptions/${row.subscription.id}/approve`, { method: "POST" })}>Approve</button><button className="small-button danger-outline" onClick={() => act(`/owner/subscriptions/${row.subscription.id}/reject`, { method: "POST" })}>Reject</button></div></div>)}</div> : <Empty>No pending approvals.</Empty>}</Panel></PageTitle>}{view === "attendance" && <PageTitle title="Attendance" detail={today()}><section className="content-grid"><Panel title="Manual attendance"><form className="stack" onSubmit={saveAttendance}><select className="input" value={attendanceUser} onChange={(event) => setAttendanceUser(event.target.value)}><option value="">Select customer</option>{attendance?.customers?.map((row: Data) => <option key={row.user.id} value={row.user.id}>{row.user.name}</option>)}</select><select className="input" value={attendanceType} onChange={(event) => setAttendanceType(event.target.value)}><option>PRESENT</option><option>ABSENT</option><option>EXTRA</option></select><button className="button button-primary">Save attendance</button></form></Panel><Panel title="Today's records">{attendance?.attendance?.length ? attendance.attendance.map((row: Data) => <div className="record" key={row.id}><span>{row.date} · {row.mealType}</span><Status value={row.status} /></div>) : <Empty>No attendance recorded today.</Empty>}</Panel></section></PageTitle>}</Shell>;
+}
+
 export default function HomePage() {
-  return (
-    <main
-      style={{
-        maxWidth: "600px",
-        margin: "0 auto",
-        padding: "24px 16px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px"
-      }}
-    >
-      <header
-        style={{
-          backgroundColor: "var(--bg-surface)",
-          padding: "20px",
-          borderRadius: "var(--radius-lg)",
-          boxShadow: "var(--shadow-sm)",
-          border: "1px solid var(--border-subtle)",
-          textAlign: "center"
-        }}
-      >
-        <div
-          style={{
-            display: "inline-block",
-            backgroundColor: "#ffedd5",
-            color: "var(--brand-primary)",
-            fontWeight: 700,
-            fontSize: "12px",
-            padding: "4px 10px",
-            borderRadius: "999px",
-            marginBottom: "12px"
-          }}
-        >
-          MVP Foundation
-        </div>
-        <h1
-          style={{
-            fontSize: "24px",
-            fontWeight: 700,
-            color: "var(--text-primary)",
-            marginBottom: "8px"
-          }}
-        >
-          Samarth Mess
-        </h1>
-        <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>
-          Mess Management Platform for Students, Professionals, and Mess Owners
-        </p>
-      </header>
-
-      <section
-        style={{
-          backgroundColor: "var(--bg-surface)",
-          padding: "20px",
-          borderRadius: "var(--radius-lg)",
-          boxShadow: "var(--shadow-sm)",
-          border: "1px solid var(--border-subtle)"
-        }}
-      >
-        <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "12px" }}>
-          Core Operating Loop
-        </h2>
-        <ul
-          style={{
-            listStyleType: "none",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            fontSize: "14px",
-            color: "var(--text-secondary)"
-          }}
-        >
-          <li>✨ 1. Register as Student or Professional</li>
-          <li>📍 2. Discover Messes & View Daily Menus</li>
-          <li>💳 3. Subscribe & Pay Monthly Fee</li>
-          <li>✅ 4. Owner Approval & Active Subscription</li>
-          <li>🍽️ 5. Book, Skip, or Request Extra Meals</li>
-          <li>📱 6. QR & Manual Attendance Check-in</li>
-        </ul>
-      </section>
-
-      <footer
-        style={{
-          textAlign: "center",
-          fontSize: "12px",
-          color: "var(--text-muted)",
-          marginTop: "auto"
-        }}
-      >
-        Samarth Mess Platform &copy; {new Date().getFullYear()}
-      </footer>
-    </main>
-  );
+  const [token, setToken] = useState(""); const [role, setRole] = useState<Role>("USER"); const [ready, setReady] = useState(false);
+  useEffect(() => { const stored = window.localStorage.getItem("samarth_access_token"); if (stored) { setToken(stored); setReady(true); } }, []);
+  function open() { if (!token.trim()) return; window.localStorage.setItem("samarth_access_token", token.trim()); setReady(true); }
+  function logout() { window.localStorage.removeItem("samarth_access_token"); setToken(""); setReady(false); }
+  if (!ready) return <AuthGate token={token} setToken={setToken} onContinue={open} />;
+  return <><div className="role-switch"><button className={role === "USER" ? "selected" : ""} onClick={() => setRole("USER")}>User</button><button className={role === "OWNER" ? "selected" : ""} onClick={() => setRole("OWNER")}>Owner</button></div>{role === "USER" ? <UserWorkspace token={token} onLogout={logout} /> : <OwnerWorkspace token={token} onLogout={logout} />}</>;
 }

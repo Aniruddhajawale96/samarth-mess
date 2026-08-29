@@ -1615,10 +1615,10 @@ Profile
 ### Validation
 
 ```text
-[ ] Dashboard is mobile-first
-[ ] Today's information loads from API
-[ ] Active/pending/rejected states are clear
-[ ] Primary actions are easy to reach
+[x] Dashboard is mobile-first
+[x] Today's information loads from API
+[x] Active/pending/rejected states are clear
+[x] Primary actions are easy to reach
 ```
 
 ### Suggested commit
@@ -1652,10 +1652,10 @@ Provide consistent navigation and loading/error/empty states.
 ### Validation
 
 ```text
-[ ] Owner can complete daily workflow without dead-end pages
-[ ] Navigation is consistent
-[ ] API errors are displayed safely
-[ ] Mobile/tablet layouts remain usable
+[x] Owner can complete daily workflow without dead-end pages
+[x] Navigation is consistent
+[x] API errors are displayed safely
+[x] Mobile/tablet layouts remain usable
 ```
 
 ### Suggested commit
@@ -2249,8 +2249,8 @@ Use this section as the quick status overview.
 [x] Commit 30 — User History
 [x] Commit 31 — Owner Dashboard
 [x] Commit 32 — Owner Customer Management
-[ ] Commit 33 — User Dashboard
-[ ] Commit 34 — Owner Menu and Attendance UX Integration
+[x] Commit 33 — User Dashboard
+[x] Commit 34 — Owner Menu and Attendance UX Integration
 [ ] Commit 35 — Admin Foundation
 [ ] Commit 36 — Notifications Foundation
 [ ] Commit 37 — Audit and Operational Activity
