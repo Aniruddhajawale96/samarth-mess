@@ -827,11 +827,11 @@ The frontend must never be the only authorization layer.
 ### Validation
 
 ```text
-[ ] User cannot call owner endpoints
-[ ] Owner cannot access another owner's mess
-[ ] User cannot access admin endpoints
-[ ] Admin can access admin endpoints
-[ ] Unauthorized resource access returns a safe error
+[x] User cannot call owner endpoints
+[x] Owner cannot access another owner's mess
+[x] User cannot access admin endpoints
+[x] Admin can access admin endpoints
+[x] Unauthorized resource access returns a safe error
 ```
 
 ### Suggested commit
@@ -2227,7 +2227,7 @@ Use this section as the quick status overview.
 [ ] Commit 08 — Express API Foundation
 [x] Commit 09 — Shared Validation Layer
 [x] Commit 10 — Authentication
-[ ] Commit 11 — Role-Based Authorization
+[x] Commit 11 — Role-Based Authorization
 [ ] Commit 12 — User Profile and Profile Photo
 [ ] Commit 13 — Mess Management for Owners
 [ ] Commit 14 — Mess Discovery and Details
