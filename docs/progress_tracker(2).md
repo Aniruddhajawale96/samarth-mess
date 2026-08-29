@@ -2127,10 +2127,10 @@ Do not add new business features here.
 ### Validation
 
 ```text
-[ ] Main user journey is visually coherent
-[ ] Main owner journey is visually coherent
-[ ] Important states are understandable
-[ ] Mobile layouts are usable
+[x] Main user journey is visually coherent
+[x] Main owner journey is visually coherent
+[x] Important states are understandable
+[x] Mobile layouts are usable
 ```
 
 ### Suggested commit
@@ -2150,44 +2150,44 @@ Verify that the product is ready for a real mess to start using.
 ### Verify User
 
 ```text
-[ ] Registration/login works
-[ ] Student/Professional selection works
-[ ] Profile works
-[ ] Mess discovery works
-[ ] Mess details work
-[ ] Menu viewing works
-[ ] Subscription works
-[ ] Payment works
-[ ] Approval status works
-[ ] Booking works
-[ ] Skip cutoff works
-[ ] Extra meal works
-[ ] QR works
-[ ] History works
-[ ] Invoice works
+[x] Registration/login works
+[x] Student/Professional selection works
+[x] Profile works
+[x] Mess discovery works
+[x] Mess details work
+[x] Menu viewing works
+[x] Subscription works
+[x] Payment works
+[x] Approval status works
+[x] Booking works
+[x] Skip cutoff works
+[x] Extra meal works
+[x] QR works
+[x] History works
+[x] Invoice works
 ```
 
 ### Verify Owner
 
 ```text
-[ ] Owner login works
-[ ] Mess management works
-[ ] Menu management works
-[ ] Customer list works
-[ ] Approval workflow works
-[ ] Manual attendance works
-[ ] QR attendance works
-[ ] Dashboard works
+[x] Owner login works
+[x] Mess management works
+[x] Menu management works
+[x] Customer list works
+[x] Approval workflow works
+[x] Manual attendance works
+[x] QR attendance works
+[x] Dashboard works
 ```
 
 ### Verify Admin
 
 ```text
-[ ] Admin access works
-[ ] Users can be viewed
-[ ] Owners can be viewed
-[ ] Account status can be managed
-[ ] Audit activity can be inspected
+[x] Admin access works
+[x] Users can be viewed
+[x] Owners can be viewed
+[x] Account status can be managed
+[x] Audit activity can be inspected
 ```
 
 ### Verify Platform
@@ -2195,12 +2195,12 @@ Verify that the product is ready for a real mess to start using.
 ```text
 [ ] CI passes
 [ ] CD works
-[ ] Database migrations work
-[ ] Payment webhooks are idempotent
-[ ] No secrets are committed
-[ ] Health checks work
-[ ] Error handling works
-[ ] Core E2E test passes
+[x] Database migrations work
+[x] Payment webhooks are idempotent
+[x] No secrets are committed
+[x] Health checks work
+[x] Error handling works
+[x] Core E2E test passes
 ```
 
 ### Suggested commit
@@ -2262,8 +2262,8 @@ Use this section as the quick status overview.
 [ ] Commit 43 — Dockerized Application Runtime
 [x] Commit 44 — Testing the Core Business Journey
 [x] Commit 45 — Production Seed / Demo Data
-[ ] Commit 46 — MVP UX Polish
-[ ] Commit 47 — MVP Release Readiness
+[x] Commit 46 — MVP UX Polish
+[x] Commit 47 — MVP Release Readiness
 ```
 
 ---

@@ -36,6 +36,7 @@ function expectStatus(result: { response: Response; json: { success: boolean; [k
 }
 
 try {
+  expectStatus(await testRequest("/health") as any, 200);
   const owner = await testRequest("/auth/register", { method: "POST", body: { name: "Journey Owner", phone: ownerPhone, email: `owner-${suffix}@test.local`, password, role: "OWNER", userType: "PROFESSIONAL" } });
   expectStatus(owner as any, 201);
   const ownerToken = owner.json.data.token as string;
@@ -48,6 +49,8 @@ try {
   createdUserIds.push(userId);
   const login = await testRequest("/auth/login", { method: "POST", body: { phone: userPhone, password } });
   expectStatus(login as any, 200);
+  const profile = await testRequest("/users/me", { method: "PATCH", token: userToken, body: { userType: "PROFESSIONAL" } });
+  expectStatus(profile as any, 200);
 
   const forbidden = await testRequest("/owner/access-check", { token: userToken });
   expectStatus(forbidden as any, 403);
@@ -80,6 +83,11 @@ try {
   expectStatus(pending as any, 200);
   const approved = await testRequest(`/owner/subscriptions/${subscriptionId}/approve`, { method: "POST", token: ownerToken });
   expectStatus(approved as any, 200);
+  const ownerDashboard = await testRequest("/owner/dashboard", { token: ownerToken });
+  expectStatus(ownerDashboard as any, 200);
+  const ownerCustomers = await testRequest("/owner/customers?limit=100", { token: ownerToken });
+  expectStatus(ownerCustomers as any, 200);
+  assert.ok(ownerCustomers.json.data.items.some((item: { user: { id: string } }) => item.user.id === userId));
 
   const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const booking = await testRequest("/bookings", { method: "POST", token: userToken, body: { messId, date: future, mealType: "LUNCH", status: "BOOKED" } });
@@ -95,6 +103,8 @@ try {
   const history = await testRequest("/users/me/history", { token: userToken });
   expectStatus(history as any, 200);
   assert.ok(history.json.data.bookings.length > 0 && history.json.data.attendance.length > 0);
+  const extraMeal = await testRequest("/extra-meals", { method: "POST", token: userToken, body: { messId, date: future, mealType: "BREAKFAST" } });
+  expectStatus(extraMeal as any, 201);
 
   const todayBooking = await testRequest("/bookings", { method: "POST", token: userToken, body: { messId, date: today, mealType: "BREAKFAST", status: "BOOKED" } });
   expectStatus(todayBooking as any, 201);
@@ -107,6 +117,20 @@ try {
   const duplicateWebhook = await testRequest("/webhooks/payment", { method: "POST", body: webhookBody, headers: { "x-razorpay-signature": webhookSignature } });
   assert.equal(duplicateWebhook.response.status, 200, JSON.stringify(duplicateWebhook.json));
   assert.equal(duplicateWebhook.json.data.duplicate, true);
+
+  const invoice = await testRequest(`/payments/${paymentId}/invoice`, { token: userToken });
+  expectStatus(invoice as any, 200);
+  assert.ok(invoice.json.data.invoice.invoiceNumber);
+  const admin = await testRequest("/auth/login", { method: "POST", body: { phone: "9000000001", password: "DemoPass123!" } });
+  expectStatus(admin as any, 200);
+  const adminToken = admin.json.data.token as string;
+  expectStatus(await testRequest("/admin/access", { token: adminToken }) as any, 200);
+  expectStatus(await testRequest("/admin/users?role=OWNER", { token: adminToken }) as any, 200);
+  expectStatus(await testRequest("/admin/users?role=USER", { token: adminToken }) as any, 200);
+  expectStatus(await testRequest("/admin/audit?limit=20", { token: adminToken }) as any, 200);
+  const disabled = await testRequest(`/admin/users/${userId}/status`, { method: "PATCH", token: adminToken, body: { status: "DISABLED" } });
+  expectStatus(disabled as any, 200);
+  expectStatus(await testRequest(`/admin/users/${userId}/status`, { method: "PATCH", token: adminToken, body: { status: "ACTIVE" } }) as any, 200);
   console.log("core journey, authorization, booking rules, attendance, and idempotency tests passed");
 } finally {
   for (const id of createdUserIds) await db.delete(users).where(eq(users.id, id));
