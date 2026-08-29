@@ -86,6 +86,25 @@ export const AttendanceSchema = z.object({
   status: AttendanceStatusSchema,
   method: AttendanceMethodSchema.default("MANUAL")
 }).strict();
+export const AttendanceBatchSchema = z.object({
+  messId: IdSchema,
+  date: DateSchema,
+  records: z.array(z.object({
+    userId: IdSchema,
+    mealType: MealTypeSchema,
+    status: AttendanceStatusSchema
+  }).strict()).min(1).max(500)
+}).strict();
+export const AttendanceQuerySchema = z.object({
+  messId: IdSchema.optional(),
+  date: DateSchema.optional()
+}).strict();
+export const QrAttendanceSchema = z.object({
+  messId: IdSchema,
+  date: DateSchema,
+  mealType: MealTypeSchema,
+  token: z.string().trim().min(20).max(200)
+}).strict();
 export const PaymentIdentifierSchema = z.object({
   provider: PaymentProviderSchema,
   providerPaymentId: z.string().trim().min(1).max(255).optional(),

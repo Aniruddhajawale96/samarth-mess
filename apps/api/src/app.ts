@@ -24,6 +24,7 @@ import { paymentRouter } from "./routes/payments.js";
 import { approvalRouter } from "./routes/approvals.js";
 import { bookingRouter } from "./routes/bookings.js";
 import { qrRouter } from "./routes/qr.js";
+import { attendanceRouter } from "./routes/attendance.js";
 import path from "node:path";
 
 export function createApp(): Express {
@@ -67,6 +68,7 @@ export function createApp(): Express {
   app.use(approvalRouter);
   app.use(bookingRouter);
   app.use(qrRouter);
+  app.use(attendanceRouter);
 
   // Future versioned routes will be mounted here:
   // app.use("/api/v1", v1Router);

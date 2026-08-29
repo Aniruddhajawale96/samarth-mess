@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { mealTypeEnum, attendanceStatusEnum, attendanceMethodEnum } from "./enums";
 import { users } from "./users";
 import { messes } from "./messes";
@@ -18,7 +18,9 @@ export const attendance = pgTable("attendance", {
   markedBy: text("marked_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
-});
+}, (table) => [
+  uniqueIndex("attendance_user_mess_date_meal_idx").on(table.userId, table.messId, table.date, table.mealType)
+]);
 
 export type AttendanceRecord = typeof attendance.$inferSelect;
 export type NewAttendanceRecord = typeof attendance.$inferInsert;

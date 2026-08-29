@@ -1322,12 +1322,12 @@ Allow the owner to record attendance manually.
 ### Validation
 
 ```text
-[ ] Owner sees customers for own mess
-[ ] Owner can mark present
-[ ] Owner can mark absent
-[ ] Owner can mark extra
-[ ] Batch save works
-[ ] Duplicate attendance is controlled
+[x] Owner sees customers for own mess
+[x] Owner can mark present
+[x] Owner can mark absent
+[x] Owner can mark extra
+[x] Batch save works
+[x] Duplicate attendance is controlled
 ```
 
 ### Suggested commit
@@ -1357,12 +1357,12 @@ Allow owners to scan the user QR and automatically record attendance.
 ### Validation
 
 ```text
-[ ] Valid QR marks correct user
-[ ] Wrong-mess user is rejected
-[ ] Inactive subscriber is rejected
-[ ] Invalid QR is rejected
-[ ] Attendance method is QR
-[ ] Duplicate scan is safe
+[x] Valid QR marks correct user
+[x] Wrong-mess user is rejected
+[x] Inactive subscriber is rejected
+[x] Invalid QR is rejected
+[x] Attendance method is QR
+[x] Duplicate scan is safe
 ```
 
 ### Suggested commit
@@ -2241,8 +2241,8 @@ Use this section as the quick status overview.
 [x] Commit 22 — Meal Skip Cutoff
 [x] Commit 23 — Extra Meals
 [x] Commit 24 — User QR Identity
-[ ] Commit 25 — Manual Attendance
-[ ] Commit 26 — QR Attendance
+[x] Commit 25 — Manual Attendance
+[x] Commit 26 — QR Attendance
 [ ] Commit 27 — Payment History and Invoice Access
 [ ] Commit 28 — Invoice Generation
 [ ] Commit 29 — WhatsApp Invoice Delivery
