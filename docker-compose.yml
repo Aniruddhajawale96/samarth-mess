@@ -1,4 +1,57 @@
 services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: ${COMPOSE_ENV_FILE:-.env}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${API_HOST_PORT:-4000}:4000"
+    command: ["node", "apps/api/dist/index.js"]
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: ${COMPOSE_ENV_FILE:-.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["pnpm", "--filter", "@samarth-mess/db", "db:migrate"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: ${COMPOSE_ENV_FILE:-.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["node", "apps/api/dist/worker.js"]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${WEB_API_URL:-http://localhost:4000}
+    env_file: ${COMPOSE_ENV_FILE:-.env}
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "${WEB_HOST_PORT:-3000}:3000"
+
   postgres:
     image: postgres:16-alpine
     container_name: samarth_mess_postgres
@@ -8,7 +61,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: samarth_mess
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +75,7 @@ services:
     container_name: samarth_mess_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_HOST_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes

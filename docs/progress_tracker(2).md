@@ -1906,11 +1906,11 @@ Build
 ### Validation
 
 ```text
-[ ] CI workflow runs
-[ ] PR checks fail on type errors
-[ ] PR checks fail on tests
-[ ] PR checks fail on build failures
-[ ] Main branch cannot silently ship broken code
+[x] CI workflow runs
+[x] PR checks fail on type errors
+[x] PR checks fail on tests
+[x] PR checks fail on build failures
+[x] Main branch cannot silently ship broken code
 ```
 
 ### Suggested commit
@@ -1965,9 +1965,9 @@ where infrastructure allows.
 ```text
 [ ] Deployment succeeds from main
 [ ] Production health endpoint works
-[ ] Database migrations run safely
-[ ] Environment variables are documented
-[ ] Rollback procedure is documented
+[x] Database migrations run safely
+[x] Environment variables are documented
+[x] Rollback procedure is documented
 ```
 
 ### Suggested commit
@@ -2257,8 +2257,8 @@ Use this section as the quick status overview.
 [x] Commit 38 — Background Job Foundation
 [x] Commit 39 — Error Handling and Reliability Hardening
 [x] Commit 40 — Security Hardening
-[ ] Commit 41 — CI Pipeline
-[ ] Commit 42 — CD and Environment Deployment
+[x] Commit 41 — CI Pipeline
+[x] Commit 42 — CD and Environment Deployment
 [ ] Commit 43 — Dockerized Application Runtime
 [ ] Commit 44 — Testing the Core Business Journey
 [ ] Commit 45 — Production Seed / Demo Data
