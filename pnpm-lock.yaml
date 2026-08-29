@@ -38,6 +38,9 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
+      drizzle-orm:
+        specifier: ^0.39.3
+        version: 0.39.3(@types/pg@8.23.1)(pg@8.23.0)
       express:
         specifier: ^4.21.2
         version: 4.22.2
@@ -47,6 +50,9 @@ importers:
       uuid:
         specifier: ^14.0.2
         version: 14.0.2
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@types/cors':
         specifier: ^2.8.17

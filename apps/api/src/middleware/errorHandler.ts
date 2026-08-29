@@ -22,16 +22,19 @@ import { logger } from "../lib/logger.js";
 export interface ApiError extends Error {
   statusCode?: number;
   code?: string;
+  details?: unknown;
 }
 
 export function createApiError(
   message: string,
   statusCode: number,
-  code: string
+  code: string,
+  details?: unknown
 ): ApiError {
   const error = new Error(message) as ApiError;
   error.statusCode = statusCode;
   error.code = code;
+  error.details = details;
   return error;
 }
 
@@ -73,6 +76,7 @@ export function errorHandler(
       code,
       message:
         statusCode === 500 ? "An unexpected error occurred" : err.message,
+      ...(err.details === undefined ? {} : { details: err.details }),
       requestId: req.requestId,
     },
   });

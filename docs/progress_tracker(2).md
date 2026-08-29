@@ -741,10 +741,10 @@ Zod schemas for:
 ### Validation
 
 ```text
-[ ] Invalid request is rejected
-[ ] Valid request passes
-[ ] Error response identifies invalid fields
-[ ] Shared validation package is reusable
+[x] Invalid request is rejected
+[x] Valid request passes
+[x] Error response identifies invalid fields
+[x] Shared validation package is reusable
 ```
 
 ### Suggested commit
@@ -786,12 +786,12 @@ according to the selected registration flow.
 ### Validation
 
 ```text
-[ ] User can register
-[ ] Duplicate identity is rejected
-[ ] User can log in
-[ ] Invalid credentials fail safely
-[ ] Authenticated user can retrieve own profile
-[ ] Protected endpoint rejects unauthenticated requests
+[x] User can register
+[x] Duplicate identity is rejected
+[x] User can log in
+[x] Invalid credentials fail safely
+[x] Authenticated user can retrieve own profile
+[x] Protected endpoint rejects unauthenticated requests
 ```
 
 ### Suggested commit
@@ -2225,8 +2225,8 @@ Use this section as the quick status overview.
 [x] Commit 06 — Core Database Schema: Booking, Attendance, Payments, Invoice, Audit
 [ ] Commit 07 — Configuration and Environment Validation
 [ ] Commit 08 — Express API Foundation
-[ ] Commit 09 — Shared Validation Layer
-[ ] Commit 10 — Authentication
+[x] Commit 09 — Shared Validation Layer
+[x] Commit 10 — Authentication
 [ ] Commit 11 — Role-Based Authorization
 [ ] Commit 12 — User Profile and Profile Photo
 [ ] Commit 13 — Mess Management for Owners
