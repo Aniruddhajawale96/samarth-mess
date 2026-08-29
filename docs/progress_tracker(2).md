@@ -2216,7 +2216,7 @@ chore: prepare mvp release
 Use this section as the quick status overview.
 
 ```text
-[ ] Commit 00 — Repository and Monorepo Foundation
+[x] Commit 00 — Repository and Monorepo Foundation
 [ ] Commit 01 — Application Skeleton
 [ ] Commit 02 — Shared Package Foundation
 [ ] Commit 03 — Database Foundation
