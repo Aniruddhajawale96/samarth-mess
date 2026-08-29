@@ -610,12 +610,12 @@ Include:
 ### Validation
 
 ```text
-[ ] All migrations apply
-[ ] Financial amounts use a safe representation
-[ ] Provider payment IDs have appropriate uniqueness
-[ ] Duplicate booking protection exists
-[ ] Foreign keys are correct
-[ ] Schema typechecks
+[x] All migrations apply
+[x] Financial amounts use a safe representation
+[x] Provider payment IDs have appropriate uniqueness
+[x] Duplicate booking protection exists
+[x] Foreign keys are correct
+[x] Schema typechecks
 ```
 
 ### Suggested commit
@@ -2222,7 +2222,7 @@ Use this section as the quick status overview.
 [x] Commit 03 — Database Foundation
 [x] Commit 04 — Core Database Schema: Identity and Mess
 [x] Commit 05 — Core Database Schema: Subscription and Menu
-[ ] Commit 06 — Core Database Schema: Booking, Attendance, Payments, Invoice, Audit
+[x] Commit 06 — Core Database Schema: Booking, Attendance, Payments, Invoice, Audit
 [ ] Commit 07 — Configuration and Environment Validation
 [ ] Commit 08 — Express API Foundation
 [ ] Commit 09 — Shared Validation Layer

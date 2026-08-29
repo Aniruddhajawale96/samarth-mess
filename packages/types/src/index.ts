@@ -21,6 +21,7 @@ export type AttendanceMethod = "QR" | "MANUAL";
 
 export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED" | "REFUNDED";
 export type PaymentProvider = "RAZORPAY" | "CASH" | "UPI_MANUAL";
+export type WhatsAppStatus = "PENDING" | "SENT" | "DELIVERED" | "FAILED";
 
 export interface UserProfile {
   id: string;
@@ -48,6 +49,81 @@ export interface MessProfile {
   status: MessStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SubscriptionRecord {
+  id: string;
+  userId: string;
+  messId: string;
+  status: SubscriptionStatus;
+  startDate?: string | null;
+  endDate?: string | null;
+  autoRenew: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MealBookingRecord {
+  id: string;
+  userId: string;
+  messId: string;
+  date: string;
+  mealType: MealType;
+  status: MealBookingStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  userId: string;
+  messId: string;
+  date: string;
+  mealType: MealType;
+  status: AttendanceStatus;
+  method: AttendanceMethod;
+  markedBy?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentRecord {
+  id: string;
+  userId: string;
+  messId: string;
+  subscriptionId?: string | null;
+  provider: PaymentProvider;
+  providerPaymentId?: string | null;
+  providerOrderId?: string | null;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paidAt?: string | null;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InvoiceRecord {
+  id: string;
+  paymentId: string;
+  invoiceNumber: string;
+  fileUrl?: string | null;
+  whatsappStatus: WhatsAppStatus;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuditEventRecord {
+  id: string;
+  actorId?: string | null;
+  actorRole?: UserRole | null;
+  action: string;
+  entityType: string;
+  entityId: string;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
 }
 
 export interface ApiResponse<T = unknown> {
