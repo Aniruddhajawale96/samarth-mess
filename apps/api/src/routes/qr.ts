@@ -11,7 +11,7 @@ import { validate } from "../middleware/validate.js";
 
 export const qrRouter: ExpressRouter = Router();
 
-qrRouter.get("/users/me/qr", authenticate, requireRole("USER"), async (req: Request, res: Response, next) => {
+qrRouter.get("/users/me/qr", authenticate, requireRole("USER", "OWNER", "ADMIN"), async (req: Request, res: Response, next) => {
   try {
     let [user] = await db.select({ id: users.id, name: users.name, status: users.status, qrToken: users.qrToken }).from(users).where(eq(users.id, req.user.id)).limit(1);
     if (!user || user.status !== "ACTIVE") { next(createApiError("Authentication required", 401, "UNAUTHORIZED")); return; }

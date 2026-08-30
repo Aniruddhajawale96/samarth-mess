@@ -5,8 +5,15 @@ import * as schema from "./schema/index";
 
 const { Pool } = pg;
 
+const isSslRequired =
+  config.database.url.includes("sslmode=require") ||
+  config.database.url.includes("neon.tech") ||
+  config.database.url.includes("ssl=true") ||
+  config.isProduction;
+
 export const pool = new Pool({
-  connectionString: config.database.url
+  connectionString: config.database.url,
+  ssl: isSslRequired ? { rejectUnauthorized: false } : undefined,
 });
 
 export const db = drizzle(pool, { schema });

@@ -8,7 +8,7 @@ import { validate } from "../middleware/validate.js";
 
 export const historyRouter: ExpressRouter = Router();
 
-historyRouter.get("/users/me/history", authenticate, requireRole("USER"), validate(HistoryQuerySchema, "query"), async (req: Request, res: Response, next: (error?: unknown) => void) => {
+historyRouter.get("/users/me/history", authenticate, requireRole("USER", "OWNER", "ADMIN"), validate(HistoryQuerySchema, "query"), async (req: Request, res: Response, next: (error?: unknown) => void) => {
   try {
     const query = req.query as unknown as { page: number; limit: number };
     const offset = (query.page - 1) * query.limit;

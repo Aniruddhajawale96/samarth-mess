@@ -42,7 +42,7 @@ subscriptionRouter.post("/messes/:messId/subscriptions", authenticate, requireRo
   } catch (error) { next(error); }
 });
 
-subscriptionRouter.get("/subscriptions/me", authenticate, requireRole("USER"), async (req: Request, res: Response, next) => {
+subscriptionRouter.get("/subscriptions/me", authenticate, requireRole("USER", "OWNER", "ADMIN"), async (req: Request, res: Response, next) => {
   try {
     const rows = await db.select({ subscription: subscriptions, mess: messes }).from(subscriptions)
       .innerJoin(messes, eq(messes.id, subscriptions.messId))

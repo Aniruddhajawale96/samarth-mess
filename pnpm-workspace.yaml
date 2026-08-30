@@ -4,9 +4,12 @@ packages:
 
 allowBuilds:
   esbuild: true
-  msgpackr-extract: set this to true or false
+  msgpackr-extract: true
+  "@next/swc-win32-x64-msvc": true
 
 onlyBuiltDependencies:
   - esbuild
   - sharp
   - "@next/swc-linux-x64-gnu"
+  - "@next/swc-win32-x64-msvc"
+  - msgpackr-extract

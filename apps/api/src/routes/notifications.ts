@@ -6,7 +6,7 @@ import { requireRole } from "../middleware/authorize.js";
 
 export const notificationRouter: ExpressRouter = Router();
 
-notificationRouter.get("/users/me/notifications", authenticate, requireRole("USER"), async (req: Request, res, next) => {
+notificationRouter.get("/users/me/notifications", authenticate, requireRole("USER", "OWNER", "ADMIN"), async (req: Request, res, next) => {
   try {
     const items = await db.select().from(notificationAttempts).where(eq(notificationAttempts.recipientUserId, req.user.id)).orderBy(desc(notificationAttempts.createdAt)).limit(50);
     res.json({ success: true, data: { items }, timestamp: new Date().toISOString() });
