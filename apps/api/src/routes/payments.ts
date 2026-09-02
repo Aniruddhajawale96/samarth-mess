@@ -1,8 +1,8 @@
 import { Router, type Request, type Response, type Router as ExpressRouter } from "express";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, or, desc, sql, gte } from "drizzle-orm";
 import { config } from "@samarth-mess/config";
-import { db, invoices, messes, paymentWebhookEvents, payments, subscriptions } from "@samarth-mess/db";
+import { db, invoices, messes, paymentWebhookEvents, payments, subscriptions, users } from "@samarth-mess/db";
 import { PaymentInitiationSchema, PaymentParamsSchema, PaymentQuerySchema, PaymentVerificationSchema, PaymentWebhookSchema } from "@samarth-mess/validation";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireRole } from "../middleware/authorize.js";
@@ -140,6 +140,67 @@ paymentRouter.post("/webhooks/payment", validate(PaymentWebhookSchema), async (r
     res.json({ success: true, data: { processed: true }, timestamp: new Date().toISOString() });
   } catch (error) {
     if ((error as { code?: string }).code === "23505") { res.json({ success: true, data: { duplicate: true }, timestamp: new Date().toISOString() }); return; }
+    next(error);
+  }
+});
+
+paymentRouter.get("/owner/payments", authenticate, requireRole("OWNER"), async (req: Request, res: Response, next) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(Number(req.query.limit) || 20, 100));
+    const offset = (page - 1) * limit;
+
+    const [ownerMess] = await db.select({ id: messes.id }).from(messes).where(eq(messes.ownerId, req.user.id)).limit(1);
+    if (!ownerMess) {
+      next(createApiError("Mess not found", 404, "NOT_FOUND"));
+      return;
+    }
+    const messId = ownerMess.id;
+
+    const rows = await db.select({
+      payment: payments,
+      user: users,
+    })
+      .from(payments)
+      .innerJoin(users, eq(users.id, payments.userId))
+      .where(eq(payments.messId, messId))
+      .orderBy(desc(payments.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [todayCollectedRow] = await db.select({ total: sql<number>`sum(amount)` })
+      .from(payments)
+      .where(and(eq(payments.messId, messId), eq(payments.status, "SUCCESS"), gte(payments.createdAt, startOfToday)));
+      
+    const [monthCollectedRow] = await db.select({ total: sql<number>`sum(amount)` })
+      .from(payments)
+      .where(and(eq(payments.messId, messId), eq(payments.status, "SUCCESS"), gte(payments.createdAt, startOfMonth)));
+
+    const [pendingRow] = await db.select({ total: sql<number>`sum(amount)` })
+      .from(payments)
+      .where(and(eq(payments.messId, messId), eq(payments.status, "PENDING")));
+
+    const totals = {
+      todayCollected: Number(todayCollectedRow?.total || 0),
+      monthCollected: Number(monthCollectedRow?.total || 0),
+      pending: Number(pendingRow?.total || 0)
+    };
+
+    const items = rows.map(({ payment, user }) => ({
+      date: payment.createdAt.toISOString(),
+      user: { id: user.id, name: user.name },
+      amount: payment.amount,
+      status: payment.status,
+      subscriptionReference: payment.subscriptionId,
+      providerReference: payment.providerPaymentId || payment.providerOrderId
+    }));
+
+    res.json({ success: true, data: { items, page, limit, totals }, timestamp: new Date().toISOString() });
+  } catch (error) {
     next(error);
   }
 });
