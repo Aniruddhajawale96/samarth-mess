@@ -38,3 +38,9 @@ Thumbs.db
 !.vscode/launch.json
 *.sublime-workspace
 *.sublime-project
+
+# TS Build Info
+*.tsbuildinfo
+
+# Local spec folder
+frontend/

@@ -1,218 +1,106 @@
 "use client";
 
-import { useEffect, useState } from "react";
+export const dynamic = 'force-dynamic';
+
+import * as React from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { adminApi } from "../../lib/api";
+import { Card, CardHeader, CardContent } from "../../components/ui";
 
-const PREFIX = "/api/proxy";
-type UserRow = { user: { id: string; name: string; phone: string; email?: string | null; role: string; status: string }; mess?: { id: string; name: string; status: string } | null };
-
-async function api(path: string, token?: string, init?: RequestInit) {
-  const response = await fetch(`${PREFIX}${path}`, {
-    ...init,
-    credentials: "include",
-    headers: {
-      "content-type": "application/json",
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {})
-    }
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.error?.message ?? "Request failed");
-  return body.data;
-}
-
-function Auth({ token, setToken, onOpen }: { token: string; setToken: (v: string) => void; onOpen: () => void }) {
-  return (
-    <main className="auth-shell">
-      <div className="auth-panel">
-        <p className="eyebrow">SAMARTH MESS</p>
-        <h1>Admin access</h1>
-        <p className="muted">Sign in with an admin account or use a bearer token.</p>
-        <Link href="/login" className="button button-secondary button-wide" style={{ textAlign: "center", marginBottom: 12 }}>
-          Sign in with admin credentials
-        </Link>
-        <input className="input" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Or paste bearer token" type="password" />
-        <button className="button button-primary button-wide" onClick={onOpen} style={{ marginTop: 8 }}>Open admin with token</button>
-      </div>
-    </main>
-  );
-}
-
-export default function AdminPage() {
-  const [token, setToken] = useState("");
-  const [ready, setReady] = useState(false);
-  const [role, setRole] = useState<"USER" | "OWNER">("USER");
-  const [search, setSearch] = useState("");
-  const [rows, setRows] = useState<UserRow[]>([]);
-  const [messes, setMesses] = useState<any[]>([]);
+export default function AdminDashboardPage() {
+  const [data, setData] = useState<any>(null);
   const [audit, setAudit] = useState<any[]>([]);
-  const [dashboard, setDashboard] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-
-  async function load() {
-    try {
-      setError("");
-      const [summary, list, messList, auditList] = await Promise.all([
-        api("/admin/dashboard", token),
-        api(`/admin/users?role=${role}&search=${encodeURIComponent(search)}`, token),
-        api("/admin/messes", token),
-        api("/admin/audit?limit=20", token)
-      ]);
-      setDashboard(summary);
-      setRows(list.items ?? []);
-      setMesses(messList.items ?? []);
-      setAudit(auditList.items ?? []);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to load admin workspace");
-    }
-  }
 
   useEffect(() => {
-    api("/admin/access", token)
-      .then(() => setReady(true))
-      .catch(() => {
-        const stored = typeof window !== "undefined" ? window.localStorage.getItem("samarth_access_token") : null;
-        if (stored) {
-          setToken(stored);
-          setReady(true);
-        }
+    Promise.all([
+      adminApi.getAdminDashboard(),
+      adminApi.getAuditLogs(10),
+    ])
+      .then(([dash, auditRes]) => {
+        setData(dash);
+        setAudit(auditRes.items);
+        setLoading(false);
+      })
+      .catch((err: any) => {
+        setError(err.message || "Failed to load dashboard");
+        setLoading(false);
       });
   }, []);
 
-  useEffect(() => {
-    if (ready) void load();
-  }, [ready, role]);
-
-  function open() {
-    if (!token.trim()) return;
-    window.localStorage.setItem("samarth_access_token", token.trim());
-    setReady(true);
+  if (loading) {
+    return (
+      <div style={{ display: "grid", gap: 16 }}>
+        <h1>Admin Dashboard</h1>
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} style={{ height: 80, background: "var(--line)", borderRadius: 8, animation: "pulse 1.5s ease-in-out infinite" }} />
+        ))}
+      </div>
+    );
   }
 
-  async function handleLogout() {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem("samarth_access_token");
-    }
-    await fetch(`${PREFIX}/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
-    window.location.href = "/login";
+  if (error) {
+    return (
+      <div style={{ display: "grid", gap: 16 }}>
+        <h1>Admin Dashboard</h1>
+        <div className="error-banner">{error}</div>
+      </div>
+    );
   }
 
-  async function toggle(row: UserRow) {
-    try {
-      await api(`/admin/users/${row.user.id}/status`, token, {
-        method: "PATCH",
-        body: JSON.stringify({ status: row.user.status === "ACTIVE" ? "DISABLED" : "ACTIVE" })
-      });
-      setMessage("Account status updated");
-      await load();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to update account");
-    }
-  }
-
-  async function approveMess(mess: any) {
-    try {
-      await api(`/admin/messes/${mess.id}/status`, token, {
-        method: "PATCH",
-        body: JSON.stringify({ status: "ACTIVE" })
-      });
-      setMessage("Mess approved");
-      await load();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to update mess");
-    }
-  }
-
-  if (!ready) return <Auth token={token} setToken={setToken} onOpen={open} />;
+  const stats = [
+    { label: "Active Users", value: data?.users ?? 0, href: "/admin/users?role=USER", color: "var(--primary)" },
+    { label: "Active Owners", value: data?.owners ?? 0, href: "/admin/owners", color: "var(--green)" },
+    { label: "Total Messes", value: data?.messes ?? 0, href: "/admin/owners", color: "var(--ink)" },
+    { label: "Pending Approvals", value: data?.pendingMesses ?? 0, href: "/admin/owners?status=PENDING_APPROVAL", color: data?.pendingMesses > 0 ? "var(--yellow)" : "var(--muted)" },
+  ];
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
-        <div className="brand"><span className="brand-mark">SM</span><span>Samarth Mess</span></div>
-        <div className="topbar-actions">
-          <span className="role-label">Admin workspace</span>
-          <button className="logout-button" onClick={handleLogout}>Log out</button>
+    <div style={{ display: "grid", gap: 24 }}>
+      <div>
+        <p className="eyebrow">PLATFORM</p>
+        <h1>Admin Dashboard</h1>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
+        {stats.map(({ label, value, href, color }) => (
+          <Link key={label} href={href} style={{ textDecoration: "none" }}>
+            <Card style={{ cursor: "pointer" }}>
+              <CardContent style={{ display: "grid", gap: 4, padding: 20 }}>
+                <p style={{ fontSize: 32, fontWeight: 800, color }}>{value}</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)" }}>{label}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h2>Recent Activity</h2>
+          <Link href="/admin/activity" className="hint" style={{ fontSize: 13 }}>View All →</Link>
         </div>
-      </header>
-      <main className="main-content">
-        <div className="page-title">
-          <div>
-            <p className="eyebrow">PLATFORM OPERATIONS</p>
-            <h1>Admin dashboard</h1>
-            <p className="muted">Manage accounts and approve messes.</p>
+
+        {audit.length === 0 ? (
+          <p className="hint">No recent activity recorded.</p>
+        ) : (
+          <div style={{ display: "grid", gap: 8 }}>
+            {audit.map((event: any) => (
+              <div key={event.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", background: "var(--card)", borderRadius: 8, border: "1px solid var(--line)" }}>
+                <div>
+                  <span style={{ fontWeight: 600, fontSize: 13 }}>{event.action}</span>
+                  <span className="hint" style={{ fontSize: 12, marginLeft: 8 }}>on {event.entityType} {event.entityId.slice(0, 8)}…</span>
+                </div>
+                <span className="hint" style={{ fontSize: 12 }}>
+                  {new Date(event.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+            ))}
           </div>
-        </div>
-        {error && <div className="error-banner">{error}<button onClick={() => setError("")} aria-label="Dismiss">×</button></div>}
-        {message && <div className="notice">{message}<button onClick={() => setMessage("")} aria-label="Dismiss">×</button></div>}
-        <section className="metrics metrics-owner">
-          <div className="metric"><span>Active users</span><strong>{dashboard.users ?? "–"}</strong></div>
-          <div className="metric"><span>Active owners</span><strong>{dashboard.owners ?? "–"}</strong></div>
-          <div className="metric"><span>Total messes</span><strong>{dashboard.messes ?? "–"}</strong></div>
-          <div className="metric"><span>Pending messes</span><strong>{dashboard.pendingMesses ?? "–"}</strong></div>
-        </section>
-        <section className="panel">
-          <div className="panel-header">
-            <h2>Accounts</h2>
-            <div className="row-actions">
-              <button className={role === "USER" ? "small-button" : "text-button"} onClick={() => setRole("USER")}>Users</button>
-              <button className={role === "OWNER" ? "small-button" : "text-button"} onClick={() => setRole("OWNER")}>Owners</button>
-            </div>
-          </div>
-          <form className="row-actions" onSubmit={(e) => { e.preventDefault(); void load(); }}>
-            <input className="input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, phone, or email" />
-            <button className="button button-secondary">Search</button>
-          </form>
-          {rows.length ? (
-            <div className="record-list">
-              {rows.map((row) => (
-                <div className="record" key={row.user.id}>
-                  <div>
-                    <strong>{row.user.name}</strong>
-                    <p className="muted">{row.user.phone} · {row.user.email || "No email"}{row.mess ? ` · ${row.mess.name}` : ""}</p>
-                  </div>
-                  <div className="row-actions">
-                    <span className={`status status-${row.user.status.toLowerCase()}`}>{row.user.status.toLowerCase()}</span>
-                    <button className="small-button" onClick={() => void toggle(row)}>{row.user.status === "ACTIVE" ? "Disable" : "Enable"}</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty">No matching accounts.</div>
-          )}
-        </section>
-        <section className="panel">
-          <div className="panel-header"><h2>Mess approvals</h2></div>
-          {messes.filter((item) => item.mess.status === "PENDING_APPROVAL").length ? (
-            <div className="record-list">
-              {messes.filter((item) => item.mess.status === "PENDING_APPROVAL").map((item) => (
-                <div className="record" key={item.mess.id}>
-                  <div><strong>{item.mess.name}</strong><p className="muted">Owner: {item.owner.name}</p></div>
-                  <button className="small-button" onClick={() => void approveMess(item.mess)}>Approve</button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty">No pending mess approvals.</div>
-          )}
-        </section>
-        <section className="panel">
-          <div className="panel-header"><h2>Recent audit activity</h2></div>
-          {audit.length ? (
-            <div className="record-list">
-              {audit.map((item) => (
-                <div className="record" key={item.id}>
-                  <div><strong>{item.action.replaceAll("_", " ")}</strong><p className="muted">{item.entityType} · {item.entityId}</p></div>
-                  <span className="muted">{new Date(item.createdAt).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty">No audit activity yet.</div>
-          )}
-        </section>
-      </main>
-    </main>
+        )}
+      </div>
+    </div>
   );
 }

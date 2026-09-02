@@ -1,0 +1,12 @@
+export { ApiError, api } from "./client";
+export * as authApi from "./auth";
+export * as usersApi from "./users";
+export * as messesApi from "./messes";
+export * as subscriptionsApi from "./subscriptions";
+export * as paymentsApi from "./payments";
+export * as bookingsApi from "./bookings";
+export * as attendanceApi from "./attendance";
+export * as menusApi from "./menus";
+export * as ownerApi from "./owner";
+export * as adminApi from "./admin";
+export { qrApi } from "./qr";

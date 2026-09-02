@@ -3,6 +3,9 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { authApi } from "../../../lib/api";
+import { ApiError } from "../../../lib/api/client";
+import { defaultPathForRole } from "../../../lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,46 +20,35 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/proxy/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ phone: phone.trim(), password }),
-      });
-
-      const body = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setError(body?.error?.message ?? "Invalid phone or password.");
-        return;
-      }
-
-      // Session is now established via HttpOnly cookie from the API.
-      // Redirect to home — the home page will detect the session.
-      router.push("/");
+      const { user } = await authApi.login({ phone: phone.trim(), password });
+      router.push(defaultPathForRole(user.role as any));
       router.refresh();
-    } catch {
-      setError("Could not reach the server. Please try again.");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Could not reach the server. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="auth-shell">
-      <div className="auth-panel">
-        <p className="eyebrow">SAMARTH MESS</p>
-        <h1>Sign in</h1>
-        <p className="muted">Enter your registered phone number and password.</p>
+    <div className="auth-shell">
+      <div className="auth-panel" style={{ width: "100%", maxWidth: 400, margin: "0 auto" }}>
+        <p className="eyebrow" style={{ textAlign: "center", marginBottom: 8 }}>SAMARTH MESS</p>
+        <h1 style={{ textAlign: "center", marginBottom: 8 }}>Sign in</h1>
+        <p className="muted" style={{ textAlign: "center", marginBottom: 24 }}>Enter your registered phone number and password.</p>
 
         {error && (
-          <div className="error-banner" role="alert">
+          <div className="error-banner" role="alert" style={{ marginBottom: 24 }}>
             {error}
             <button onClick={() => setError("")} aria-label="Dismiss">×</button>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
+        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
           <div>
             <label className="field-label" htmlFor="phone">Phone number</label>
             <input
@@ -69,6 +61,7 @@ export default function LoginPage() {
               onChange={(e) => setPhone(e.target.value)}
               required
               disabled={loading}
+              style={{ width: "100%" }}
             />
           </div>
 
@@ -84,6 +77,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
+              style={{ width: "100%" }}
             />
           </div>
 
@@ -91,16 +85,21 @@ export default function LoginPage() {
             className="button button-primary button-wide"
             type="submit"
             disabled={loading}
-            style={{ marginTop: 4 }}
+            style={{ marginTop: 8 }}
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
-        <Link href="/forgot-password" className="hint" style={{ textAlign: "center", color: "var(--green)" }}>
-          Forgot your password?
-        </Link>
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
+          <Link href="/forgot-password" className="hint" style={{ color: "var(--green)" }}>
+            Forgot your password?
+          </Link>
+          <div className="hint">
+            Don't have an account? <Link href="/register" style={{ color: "var(--ink)", fontWeight: 600 }}>Register</Link>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
