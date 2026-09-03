@@ -1,10 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm install && pnpm --filter @samarth-mess/types build && pnpm --filter @samarth-mess/shared build && pnpm --filter @samarth-mess/validation build && pnpm --filter @samarth-mess/web build",
+  "buildCommand": "pnpm --filter @samarth-mess/types build && pnpm --filter @samarth-mess/shared build && pnpm --filter @samarth-mess/validation build && pnpm --filter @samarth-mess/web build",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "pnpm install",
+  "installCommand": "corepack enable && pnpm install",
   "framework": "nextjs",
-  "regions": ["sin1"],
+  "regions": ["iad1"],
   "rewrites": [
     {
       "source": "/api/proxy/:path*",
