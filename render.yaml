@@ -7,6 +7,10 @@ services:
     startCommand: pnpm --filter @samarth-mess/api start
     healthCheckPath: /health
     envVars:
+      - key: NODE_VERSION
+        value: 24.x
+      - key: PNPM_VERSION
+        value: 9
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
