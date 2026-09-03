@@ -35,16 +35,12 @@ export function requireMessOwner(req: Request, _res: Response, next: NextFunctio
     return;
   }
 
-  void db.select({ id: messes.id, ownerId: messes.ownerId }).from(messes)
+  db.select({ id: messes.id, ownerId: messes.ownerId }).from(messes)
     .where(eq(messes.id, messId))
     .limit(1)
     .then(([mess]) => {
       // Do not distinguish a missing mess from another owner's mess.
-      if (!mess) {
-        next(createApiError("You do not have access to this mess", 403, "FORBIDDEN"));
-        return;
-      }
-      if (mess.ownerId !== req.user.id) {
+      if (!mess || mess.ownerId !== req.user.id) {
         next(createApiError("You do not have access to this mess", 403, "FORBIDDEN"));
         return;
       }
@@ -67,7 +63,7 @@ export function requireMenuOwner(req: Request, _res: Response, next: NextFunctio
     next(createApiError("Menu ID is required", 400, "VALIDATION_ERROR"));
     return;
   }
-  void db.select({ id: menus.id }).from(menus)
+  db.select({ id: menus.id }).from(menus)
     .innerJoin(messes, eq(messes.id, menus.messId))
     .where(and(eq(menus.id, menuId), eq(messes.ownerId, req.user.id)))
     .limit(1)

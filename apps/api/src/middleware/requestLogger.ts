@@ -17,13 +17,19 @@ export function requestLoggerMiddleware(
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    logger.info("request", {
+    const logData = {
       requestId: req.requestId,
       method: req.method,
       path: req.path,
       status: res.statusCode,
       durationMs: duration,
-    });
+    };
+    // Log slow requests (> 2s) or errors as warnings
+    if (duration > 2000 || res.statusCode >= 500) {
+      logger.warn("slow_request", logData);
+    } else {
+      logger.info("request", logData);
+    }
   });
 
   next();

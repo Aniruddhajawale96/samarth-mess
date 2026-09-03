@@ -14,6 +14,7 @@ import { config } from "@samarth-mess/config";
 import { requestIdMiddleware } from "./middleware/requestId.js";
 import { requestLoggerMiddleware } from "./middleware/requestLogger.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { userContextMiddleware } from "./middleware/userContext.js";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { accessRouter } from "./routes/access.js";
@@ -64,6 +65,9 @@ export function createApp(): Express {
   app.use(rateLimit({ windowMs: 60_000, max: 120, name: "global" }));
   app.use("/auth", rateLimit({ windowMs: 60_000, max: 20, name: "auth" }));
   app.use("/uploads", express.static(path.resolve("uploads")));
+
+  // ── RLS user-context (applied to authenticated routes) ──────────────────────
+  app.use(userContextMiddleware);
 
   // ── Routes ─────────────────────────────────────────────────────────────────
   app.use(healthRouter);

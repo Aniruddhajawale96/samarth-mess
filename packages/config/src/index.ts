@@ -88,6 +88,10 @@ const envSchema = z
         { message: "DATABASE_URL must be a valid PostgreSQL connection string" }
       ),
 
+    // ── Supabase (optional — enables RLS user-context queries) ──────────────
+    SUPABASE_URL: z.string().url().optional(),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+
     // ── Auth ─────────────────────────────────────────────────────────────────
     JWT_SECRET: z
       .string()
@@ -190,6 +194,11 @@ export const config = {
 
   database: {
     url: env.DATABASE_URL,
+  },
+
+  supabase: {
+    url: env.SUPABASE_URL,
+    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
   },
 
   auth: {

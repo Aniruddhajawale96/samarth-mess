@@ -40,6 +40,10 @@ const inFlight = new Set<string>();
 
 export async function deliverInvoice(invoiceId: string): Promise<void> {
   if (inFlight.has(invoiceId)) return;
+  if (!config.whatsapp.apiKey || !config.whatsapp.phoneNumberId) {
+    logger.warn("whatsapp_not_configured_skip", { invoiceId });
+    return;
+  }
   inFlight.add(invoiceId);
   try {
     const [row] = await db.select({ invoice: invoices, payment: payments, user: users, mess: messes })

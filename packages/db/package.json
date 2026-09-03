@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@samarth-mess/config": "workspace:*",
+    "@supabase/supabase-js": "^2.112.4",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.39.3",
     "pg": "^8.13.3"

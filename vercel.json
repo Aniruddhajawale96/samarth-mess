@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @samarth-mess/web build",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "regions": ["sin1"],
+  "rewrites": [
+    {
+      "source": "/api/proxy/:path*",
+      "destination": "/api/proxy/:path*"
+    }
+  ]
+}

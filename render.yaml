@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: samarth-mess-api
+    runtime: node
+    plan: free
+    buildCommand: pnpm install && pnpm --filter @samarth-mess/db build && pnpm --filter @samarth-mess/config build && pnpm --filter @samarth-mess/types build && pnpm --filter @samarth-mess/validation build && pnpm --filter @samarth-mess/shared build && pnpm --filter @samarth-mess/api build
+    startCommand: pnpm --filter @samarth-mess/api start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECRET
+        generateValue: true
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: WHATSAPP_API_KEY
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_API_URL
+        value: https://graph.facebook.com/v20.0
+      - key: REDIS_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

@@ -4,6 +4,14 @@ import { createApiError } from "./errorHandler.js";
 type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
+// Periodic cleanup of expired buckets to prevent memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of buckets) {
+    if (bucket.resetAt <= now) buckets.delete(key);
+  }
+}, 60_000).unref();
+
 export function rateLimit(options: { windowMs: number; max: number; name: string }) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     const now = Date.now();
