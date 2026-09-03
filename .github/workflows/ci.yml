@@ -1,5 +1,14 @@
-name: CI
+name: CI Build
+on: [push]
 
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 on:
   push:
     branches: [main]

@@ -1,9 +1,8 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
+import { Pool } from "pg";
+import type { PoolClient } from "pg";
 import { config } from "@samarth-mess/config";
 import * as schema from "./schema/index";
-
-const { Pool } = pg;
 
 const isSslRequired =
   config.database.url.includes("sslmode=require") ||
@@ -38,7 +37,7 @@ export const db: Database = drizzle(pool, { schema });
 //   }
 
 export interface UserContext {
-  client: pg.PoolClient;
+  client: PoolClient;
   userDb: Database;
 }
 
@@ -76,7 +75,7 @@ export async function createUserContext(
  * Release a user-context connection back to the pool.
  * Always call this in a finally block to prevent connection leaks.
  */
-export async function releaseUserContext(client: pg.PoolClient): Promise<void> {
+export async function releaseUserContext(client: PoolClient): Promise<void> {
   try {
     await client.query("RESET request.jwt.claims");
   } finally {
