@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim AS build
+FROM node:24-bookworm-slim AS build
 WORKDIR /app
 RUN corepack enable
 ARG NEXT_PUBLIC_API_URL=http://localhost:4000
@@ -9,7 +9,7 @@ COPY packages packages
 RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @samarth-mess/web build
 
-FROM node:22-bookworm-slim AS runtime
+FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
