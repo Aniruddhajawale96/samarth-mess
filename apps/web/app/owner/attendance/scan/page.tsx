@@ -3,14 +3,28 @@
 export const dynamic = 'force-dynamic';
 
 import * as React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { ownerApi, qrApi } from "../../../../lib/api";
 import { Card, CardHeader, CardContent, Button } from "../../../../components/ui";
 import { UserAvatar, StatusBadge } from "../../../../components/domain";
 import Link from "next/link";
-import { Html5Qrcode } from "html5-qrcode";
+import nextDynamic from "next/dynamic";
+
+// Dynamically import Html5Qrcode with SSR disabled to prevent build errors
+const Html5QrcodeComponent = nextDynamic(
+  () => import("html5-qrcode").then(mod => ({ default: mod.Html5Qrcode })),
+  { ssr: false }
+);
 
 export default function ScanAttendancePage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: "center" }}>Loading scanner...</div>}>
+      <ScanAttendanceInner />
+    </Suspense>
+  );
+}
+
+function ScanAttendanceInner() {
   const [messId, setMessId] = useState<string | null>(null);
   const [mealType, setMealType] = useState<"BREAKFAST" | "LUNCH" | "DINNER">("LUNCH");
   
@@ -18,63 +32,76 @@ export default function ScanAttendancePage() {
   const [cameraError, setCameraError] = useState("");
   
   const [scanning, setScanning] = useState(true);
-  const [scannedData, setScannedData] = useState<any>(null); // The resolved user
-  const [scanError, setScanError] = useState(""); // UI error for the specific scan attempt
+  const [scannedData, setScannedData] = useState<any>(null);
+  const [scanError, setScanError] = useState("");
   const [processing, setProcessing] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerRef = useRef<any>(null);
   const [isScannerRunning, setIsScannerRunning] = useState(false);
+
+  const startScanner = useCallback(async () => {
+    try {
+      const { Html5Qrcode } = await import("html5-qrcode");
+      
+      if (!scannerRef.current) {
+        const html5QrCode = new Html5Qrcode("qr-reader");
+        scannerRef.current = html5QrCode;
+      }
+      
+      setScanning(true);
+      setScannedData(null);
+      setScanError("");
+      setSuccessMsg("");
+      
+      await scannerRef.current.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText: string) => {
+          handleScan(decodedText);
+        },
+        () => {
+          // Parse errors are ignored
+        }
+      );
+      setIsScannerRunning(true);
+    } catch (err: any) {
+      setCameraError("Failed to start camera or camera access denied.");
+      console.error(err);
+    }
+  }, [messId, mealType]);
 
   useEffect(() => {
     ownerApi.getOwnerMess().then(res => setMessId(res.mess.id)).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!messId) return;
     
-    // Initialize scanner
-    const html5QrCode = new Html5Qrcode("qr-reader");
-    scannerRef.current = html5QrCode;
-    
-    Html5Qrcode.getCameras().then(devices => {
-      if (devices && devices.length) {
-        setScannerReady(true);
-        startScanner();
-      } else {
-        setCameraError("No cameras found on this device.");
+    const initScanner = async () => {
+      try {
+        const { Html5Qrcode } = await import("html5-qrcode");
+        const cameras = await Html5Qrcode.getCameras();
+        if (cameras && cameras.length) {
+          setScannerReady(true);
+          await startScanner();
+        } else {
+          setCameraError("No cameras found on this device.");
+        }
+      } catch (err) {
+        setCameraError("Camera access denied or unavailable.");
+        console.error(err);
       }
-    }).catch(err => {
-      setCameraError("Camera access denied or unavailable.");
-      console.error(err);
-    });
+    };
+    
+    initScanner();
 
     return () => {
       if (scannerRef.current && scannerRef.current.isScanning) {
         scannerRef.current.stop().catch(console.error);
       }
     };
-  }, []);
-
-  const startScanner = () => {
-    if (!scannerRef.current) return;
-    setScanning(true);
-    setScannedData(null);
-    setScanError("");
-    setSuccessMsg("");
-    
-    scannerRef.current.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      (decodedText) => {
-        handleScan(decodedText);
-      },
-      () => {
-        // Parse errors are ignored (happens when no QR is in frame)
-      }
-    ).then(() => {
-      setIsScannerRunning(true);
-    }).catch(err => {
-      setCameraError("Failed to start camera.");
-      console.error(err);
-    });
-  };
+  }, [messId]);
 
   const stopScanner = () => {
     if (scannerRef.current && scannerRef.current.isScanning) {
@@ -92,13 +119,11 @@ export default function ScanAttendancePage() {
     setSuccessMsg("");
 
     try {
-      // 1. Resolve token to user
       const resolveRes = await qrApi.resolveQr(token) as any;
       const user = resolveRes.data.user;
       
       setScannedData({ token, user });
 
-      // Automatically try to mark present if user is active
       if (user.status !== "ACTIVE") {
         setScanError("Customer account is disabled or inactive.");
         setProcessing(false);
@@ -133,12 +158,10 @@ export default function ScanAttendancePage() {
       
       setSuccessMsg(`Marked PRESENT for ${mealType.toLowerCase()}`);
       
-      // Auto resume scanner after 2 seconds
       setTimeout(() => {
         startScanner();
       }, 2000);
     } catch (err: any) {
-      // Handle the various failure states returned by the backend
       setScanError(err.message || "Failed to mark attendance.");
     } finally {
       setProcessing(false);
