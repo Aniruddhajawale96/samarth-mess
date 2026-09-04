@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && pnpm --filter @samarth-mess/types build && pnpm --filter @samarth-mess/shared build && pnpm --filter @samarth-mess/validation build && pnpm --filter @samarth-mess/web build",
+  "installCommand": "cd ../.. && corepack enable && pnpm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "regions": ["iad1"]
+}
