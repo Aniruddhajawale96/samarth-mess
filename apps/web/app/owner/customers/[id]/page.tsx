@@ -62,6 +62,7 @@ export default function OwnerCustomerDetailPage({ params }: { params: Promise<{ 
 
   const { user, subscriptions } = data;
   const currentSub = subscriptions[0]?.subscription; // Usually the most recent or active one
+  const currentMess = subscriptions[0]?.mess;
 
   return (
     <div style={{ display: "grid", gap: 24, maxWidth: 600, margin: "0 auto" }}>
@@ -113,12 +114,12 @@ export default function OwnerCustomerDetailPage({ params }: { params: Promise<{ 
           {currentSub ? (
             <div style={{ display: "grid", gap: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span className="hint">Plan Type</span>
-                <span style={{ fontWeight: 600 }}>{currentSub.planType}</span>
+                <span className="hint">Plan</span>
+                <span style={{ fontWeight: 600 }}>{currentMess?.name ?? "—"}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span className="hint">Amount Paid</span>
-                <span style={{ fontWeight: 600 }}><MoneyDisplay amount={currentSub.amount / 100} /></span>
+                <span className="hint">Plan Amount</span>
+                <span style={{ fontWeight: 600 }}><MoneyDisplay amount={currentMess?.monthlyPrice ?? 0} /></span>
               </div>
               {currentSub.startDate && (
                 <div style={{ display: "flex", justifyContent: "space-between" }}>

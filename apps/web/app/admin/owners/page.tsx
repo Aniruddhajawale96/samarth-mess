@@ -110,7 +110,7 @@ export default function AdminOwnersPage() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
                       <div>
                         <p className="hint" style={{ fontSize: 12 }}>Monthly Price</p>
-                        <p style={{ fontWeight: 600 }}><MoneyDisplay amount={mess.monthlyPrice / 100} /></p>
+                        <p style={{ fontWeight: 600 }}><MoneyDisplay amount={mess.monthlyPrice} /></p>
                       </div>
                       <div>
                         <p className="hint" style={{ fontSize: 12 }}>Meals per Day</p>

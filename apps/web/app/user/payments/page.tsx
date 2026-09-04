@@ -58,7 +58,7 @@ export default async function PaymentsPage({
                   <StatusBadge status={payment.status} />
                 </div>
                 <div style={{ textAlign: "right", display: "grid", gap: 8, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 18, fontWeight: 700 }}><MoneyDisplay amount={payment.amount / 100} /></span>
+                  <span style={{ fontSize: 18, fontWeight: 700 }}><MoneyDisplay amount={payment.amount} /></span>
                   <Link href={`/user/payments/${payment.id}`} className="button button-secondary" style={{ fontSize: 12, padding: "4px 12px" }}>
                     View
                   </Link>

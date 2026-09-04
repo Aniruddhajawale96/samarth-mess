@@ -92,7 +92,7 @@ export default function OwnerCustomersPage({ searchParams }: { searchParams: Pro
         </EmptyState>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
-          {data?.items.map(({ user, subscription }: any) => (
+          {data?.items.map(({ user, subscription, mess }: any) => (
             <Link key={user.id} href={`/owner/customers/${user.id}`} style={{ textDecoration: "none", color: "inherit" }}>
               <Card style={{ cursor: "pointer", transition: "border-color 0.2s ease" }}>
                 <CardContent style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -100,7 +100,7 @@ export default function OwnerCustomersPage({ searchParams }: { searchParams: Pro
                     <UserAvatar name={user.name} profilePhotoUrl={user.profilePhotoUrl} />
                     <div>
                       <p style={{ fontWeight: 700 }}>{user.name}</p>
-                      <p className="hint" style={{ fontSize: 13 }}>{user.phone} • {subscription.planType}</p>
+                      <p className="hint" style={{ fontSize: 13 }}>{user.phone} • {mess?.name ?? "—"}</p>
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>

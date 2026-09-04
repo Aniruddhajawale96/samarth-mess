@@ -106,7 +106,7 @@ export default async function OwnerDashboardPage() {
             <p className="hint">Successful payments</p>
           </CardHeader>
           <CardContent style={{ display: "flex", alignItems: "center", height: "100%" }}>
-            <span style={{ fontSize: 32, fontWeight: 700 }}><MoneyDisplay amount={revenue.successfulAmount / 100} /></span>
+            <span style={{ fontSize: 32, fontWeight: 700 }}><MoneyDisplay amount={revenue.successfulAmount} /></span>
           </CardContent>
         </Card>
       </div>

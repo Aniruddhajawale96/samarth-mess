@@ -13,6 +13,8 @@ import { deliverInvoice } from "../lib/whatsapp.js";
 import { enqueueInvoiceDelivery } from "../lib/queue.js";
 import { notify } from "../lib/notifications.js";
 import { recordAudit } from "../lib/audit.js";
+import { createRazorpayOrder, RazorpayError } from "../lib/razorpay.js";
+import { logger } from "../lib/logger.js";
 
 export const paymentRouter: ExpressRouter = Router();
 
@@ -35,13 +37,45 @@ async function markPaymentSuccessful(paymentId: string, providerPaymentId: strin
   });
 }
 
+/**
+ * Resolve a provider order id for a pending payment.
+ *
+ * - Reuses an existing providerOrderId (idempotent initiation).
+ * - In tests (NODE_ENV=test) an order id is generated locally because the test
+ *   suite runs without Razorpay network access.
+ * - Otherwise a REAL order is created through the Razorpay Orders API. Razorpay
+ *   charges amounts in paise, so the rupee amount stored in the DB is converted
+ *   here (rupees * 100) — never in the frontend.
+ */
+async function resolveProviderOrderId(payment: { id: string; amount: number; currency: string; providerOrderId: string | null; subscriptionId: string | null; messId: string; userId: string }): Promise<string> {
+  if (payment.providerOrderId) return payment.providerOrderId;
+  if (config.isTest) return `order_${randomUUID().replaceAll("-", "")}`;
+  const orderId = await createRazorpayOrder({
+    amountInPaise: payment.amount * 100,
+    currency: payment.currency || "INR",
+    receipt: `pay_${payment.id.slice(0, 24)}`,
+    notes: { paymentId: payment.id, subscriptionId: payment.subscriptionId ?? "", messId: payment.messId, userId: payment.userId },
+  });
+  logger.info("razorpay_order_created", { paymentId: payment.id, orderId });
+  return orderId;
+}
+
 paymentRouter.post("/payments", authenticate, requireRole("USER"), validate(PaymentInitiationSchema), async (req: Request, res: Response, next) => {
   try {
     const { subscriptionId } = req.body as { subscriptionId: string };
     const [payment] = await db.select().from(payments).where(and(eq(payments.subscriptionId, subscriptionId), eq(payments.userId, req.user.id))).limit(1);
     if (!payment) { next(createApiError("Payment request not found", 404, "NOT_FOUND")); return; }
     if (payment.status !== "PENDING") { next(createApiError("Payment request is no longer pending", 409, "PAYMENT_NOT_PENDING")); return; }
-    const providerOrderId = payment.providerOrderId ?? `order_${randomUUID().replaceAll("-", "")}`;
+    let providerOrderId: string;
+    try {
+      providerOrderId = await resolveProviderOrderId(payment);
+    } catch (error) {
+      if (error instanceof RazorpayError) {
+        next(createApiError(error.message, 502, "PAYMENT_PROVIDER_UNAVAILABLE"));
+        return;
+      }
+      throw error;
+    }
     const [updated] = await db.update(payments).set({ providerOrderId, updatedAt: new Date() }).where(eq(payments.id, payment.id)).returning();
     res.status(201).json({ success: true, data: { payment: { id: updated.id, status: updated.status, amount: updated.amount, currency: updated.currency, provider: updated.provider, providerOrderId: updated.providerOrderId }, provider: { keyId: config.payment.razorpayKeyId ?? null, orderId: updated.providerOrderId } }, timestamp: new Date().toISOString() });
   } catch (error) { next(error); }
@@ -116,7 +150,8 @@ paymentRouter.post("/webhooks/payment", validate(PaymentWebhookSchema), async (r
       await tx.insert(paymentWebhookEvents).values({ id: randomUUID(), providerEventId: input.eventId, providerPaymentId: input.payment.id, event: input.event, payload: input as unknown as Record<string, unknown> });
       const [payment] = await tx.select().from(payments).where(or(eq(payments.providerPaymentId, input.payment.id), input.payment.orderId ? eq(payments.providerOrderId, input.payment.orderId) : undefined)).limit(1);
       if (!payment) return;
-      if (input.payment.amount !== undefined && input.payment.amount !== payment.amount) throw createApiError("Webhook payment amount does not match", 400, "PAYMENT_AMOUNT_MISMATCH");
+      // Razorpay reports amounts in paise; the DB stores whole rupees.
+      if (input.payment.amount !== undefined && input.payment.amount !== payment.amount * 100) throw createApiError("Webhook payment amount does not match", 400, "PAYMENT_AMOUNT_MISMATCH");
       const status = input.event === "payment.captured" && input.payment.status === "captured" ? "SUCCESS" : "FAILED";
       changedPayment = { id: payment.id, status };
       await tx.update(payments).set({ providerPaymentId: input.payment.id, providerOrderId: input.payment.orderId ?? payment.providerOrderId, status, paidAt: status === "SUCCESS" ? new Date() : null, updatedAt: new Date() }).where(eq(payments.id, payment.id));

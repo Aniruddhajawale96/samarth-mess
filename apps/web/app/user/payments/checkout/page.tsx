@@ -67,7 +67,8 @@ export default function CheckoutPage() {
 
     const options = {
       key: summary.provider.keyId,
-      amount: summary.payment.amount,
+      // The server created a real Razorpay order for the DB rupee amount * 100 (paise).
+      amount: summary.payment.amount * 100,
       currency: summary.payment.currency ?? "INR",
       name: "Samarth Mess",
       description: "Monthly Subscription",
@@ -148,7 +149,7 @@ export default function CheckoutPage() {
           <div style={{ background: "var(--line)", height: 1 }} />
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 18 }}>
             <span style={{ fontWeight: 700 }}>Total</span>
-            <MoneyDisplay amount={summary.payment.amount / 100} className="font-bold" />
+            <MoneyDisplay amount={summary.payment.amount} className="font-bold" />
           </div>
         </CardContent>
       </Card>
@@ -161,7 +162,7 @@ export default function CheckoutPage() {
         onClick={handlePay}
         disabled={processing}
       >
-        {processing ? "Processing…" : `Pay ₹${summary.payment.amount / 100}`}
+        {processing ? "Processing…" : `Pay ₹${summary.payment.amount}`}
       </Button>
 
       <p className="hint" style={{ textAlign: "center", fontSize: 12 }}>

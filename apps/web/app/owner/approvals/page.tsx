@@ -99,7 +99,7 @@ export default function ApprovalsPage({ searchParams }: { searchParams: Promise<
         </EmptyState>
       ) : (
         <div style={{ display: "grid", gap: 16 }}>
-          {items.map(({ subscription, user }: any) => (
+          {items.map(({ subscription, user, mess }: any) => (
             <Card key={subscription.id}>
               <CardContent style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
                 <UserAvatar name={user.name} profilePhotoUrl={user.profilePhotoUrl} />
@@ -109,11 +109,11 @@ export default function ApprovalsPage({ searchParams }: { searchParams: Promise<
                   <div style={{ display: "grid", gap: 4, marginTop: 12 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                       <span className="hint">Plan:</span>
-                      <span style={{ fontWeight: 600 }}>{subscription.planType}</span>
+                      <span style={{ fontWeight: 600 }}>{mess?.name ?? "—"}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                       <span className="hint">Amount:</span>
-                      <span style={{ fontWeight: 600 }}><MoneyDisplay amount={subscription.amount / 100} /></span>
+                      <span style={{ fontWeight: 600 }}><MoneyDisplay amount={mess?.monthlyPrice ?? 0} /></span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                       <span className="hint">Requested:</span>

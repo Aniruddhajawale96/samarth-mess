@@ -110,7 +110,8 @@ try {
   expectStatus(todayBooking as any, 201);
   const afterCutoff = await testRequest(`/bookings/${todayBooking.json.data.booking.id}`, { method: "PATCH", token: userToken, body: { status: "SKIPPED" } });
   expectStatus(afterCutoff as any, 409);
-  const webhookBody = { eventId: `evt_${suffix}`, event: "payment.captured", payment: { id: providerPaymentId, orderId, status: "captured", amount: 2400 } };
+  // Razorpay reports amounts in paise; the DB stores whole rupees (2400 => 240000 paise).
+  const webhookBody = { eventId: `evt_${suffix}`, event: "payment.captured", payment: { id: providerPaymentId, orderId, status: "captured", amount: 2400 * 100 } };
   const webhookSignature = createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!).update(JSON.stringify(webhookBody)).digest("hex");
   const firstWebhook = await testRequest("/webhooks/payment", { method: "POST", body: webhookBody, headers: { "x-razorpay-signature": webhookSignature } });
   assert.equal(firstWebhook.response.status, 200, JSON.stringify(firstWebhook.json));

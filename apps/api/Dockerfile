@@ -12,7 +12,14 @@ COPY packages/validation/package.json packages/validation/package.json
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY apps apps
 COPY packages packages
-RUN pnpm --filter @samarth-mess/api build
+# Workspace packages resolve to their built dist/ at runtime (exports map), so
+# every package the API imports must be compiled before (and inside) this image.
+RUN pnpm --filter @samarth-mess/config build \
+ && pnpm --filter @samarth-mess/validation build \
+ && pnpm --filter @samarth-mess/types build \
+ && pnpm --filter @samarth-mess/shared build \
+ && pnpm --filter @samarth-mess/db build \
+ && pnpm --filter @samarth-mess/api build
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app

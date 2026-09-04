@@ -156,7 +156,7 @@ export default function OwnerAttendancePage() {
                     <UserAvatar name={user.name} />
                     <div>
                       <p style={{ fontWeight: 700 }}>{user.name}</p>
-                      <p className="hint" style={{ fontSize: 13 }}>{user.phone} • Plan: {subscription.planType}</p>
+                      <p className="hint" style={{ fontSize: 13 }}>{user.phone} • Plan: {data?.mess?.name ?? "—"}</p>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>

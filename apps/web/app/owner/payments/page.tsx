@@ -38,7 +38,6 @@ export default function OwnerPaymentsPage({
     );
   }
 
-  const formatCurrency = (paisa: number) => paisa / 100;
 
   return (
     <div style={{ display: "grid", gap: 24, maxWidth: 1000, margin: "0 auto" }}>
@@ -61,7 +60,7 @@ export default function OwnerPaymentsPage({
               </CardHeader>
               <CardContent>
                 <span style={{ fontSize: 32, fontWeight: 800 }}>
-                  <MoneyDisplay amount={formatCurrency(data?.totals?.todayCollected ?? 0)} />
+                  <MoneyDisplay amount={data?.totals?.todayCollected ?? 0} />
                 </span>
               </CardContent>
             </Card>
@@ -73,7 +72,7 @@ export default function OwnerPaymentsPage({
               </CardHeader>
               <CardContent>
                 <span style={{ fontSize: 32, fontWeight: 800 }}>
-                  <MoneyDisplay amount={formatCurrency(data?.totals?.monthCollected ?? 0)} />
+                  <MoneyDisplay amount={data?.totals?.monthCollected ?? 0} />
                 </span>
               </CardContent>
             </Card>
@@ -85,7 +84,7 @@ export default function OwnerPaymentsPage({
               </CardHeader>
               <CardContent>
                 <span style={{ fontSize: 32, fontWeight: 800, color: "var(--yellow)" }}>
-                  <MoneyDisplay amount={formatCurrency(data?.totals?.pending ?? 0)} />
+                  <MoneyDisplay amount={data?.totals?.pending ?? 0} />
                 </span>
               </CardContent>
             </Card>
@@ -111,7 +110,7 @@ export default function OwnerPaymentsPage({
                       
                       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                         <span style={{ fontSize: 18, fontWeight: 700 }}>
-                          <MoneyDisplay amount={formatCurrency(item.amount)} />
+                          <MoneyDisplay amount={item.amount} />
                         </span>
                         <StatusBadge status={item.status} />
                       </div>

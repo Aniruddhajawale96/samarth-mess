@@ -7,7 +7,13 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps apps
 COPY packages packages
 RUN pnpm install --frozen-lockfile --ignore-scripts
-RUN pnpm --filter @samarth-mess/web build
+# Workspace packages resolve to their built dist/ at runtime (exports map), so they
+# must be compiled before the web app build. next.config.mjs enables the
+# standalone output (outputFileTracingRoot = repo root) used below.
+RUN pnpm --filter @samarth-mess/types build \
+ && pnpm --filter @samarth-mess/validation build \
+ && pnpm --filter @samarth-mess/shared build \
+ && pnpm --filter @samarth-mess/web build
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app

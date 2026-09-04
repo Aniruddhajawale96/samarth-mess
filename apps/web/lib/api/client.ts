@@ -11,6 +11,27 @@
 
 const BASE = "/api/proxy";
 
+/**
+ * Browser requests go through the same-origin Next.js proxy (/api/proxy → API).
+ * Server components / layouts fetch the API directly, but a plain fetch does NOT
+ * carry the browser's cookies — without them every authenticated server render
+ * bounces back to /login. We therefore forward the request cookies from
+ * next/headers on the server. The import is dynamic + guarded so this module
+ * stays safe to import from client components (the branch never runs there).
+ */
+async function forwardedCookieHeader(): Promise<string | undefined> {
+  if (typeof window !== "undefined") return undefined;
+  try {
+    const { cookies } = await import("next/headers");
+    const store = await cookies();
+    const value = store.toString();
+    return value.length > 0 ? value : undefined;
+  } catch {
+    // Not running inside a Next request context (tests, scripts) — no cookies.
+    return undefined;
+  }
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly code: string,
@@ -39,7 +60,11 @@ async function request<T>(
     isFormData?: boolean;
   } = {},
 ): Promise<T> {
-  const url = new URL(`${BASE}${path}`, typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  const isServer = typeof window === "undefined";
+  // Server-side: call the API directly (no proxy hop) so cookie forwarding is
+  // end-to-end. Client-side: same-origin /api/proxy rewrite (cookies flow naturally).
+  const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/+$/, "");
+  const url = isServer ? new URL(`${apiBase}${path}`) : new URL(`${BASE}${path}`, window.location.origin);
 
   if (options.query) {
     for (const [k, v] of Object.entries(options.query)) {
@@ -50,6 +75,10 @@ async function request<T>(
   }
 
   const headers: HeadersInit = {};
+  if (isServer) {
+    const cookieHeader = await forwardedCookieHeader();
+    if (cookieHeader) headers["Cookie"] = cookieHeader;
+  }
   let body: BodyInit | undefined;
 
   if (options.body !== undefined) {

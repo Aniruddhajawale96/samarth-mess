@@ -58,7 +58,7 @@ export default async function PaymentDetailPage({
         <CardContent style={{ display: "grid", gap: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span className="hint">Amount</span>
-            <span style={{ fontWeight: 700, fontSize: 18 }}><MoneyDisplay amount={payment.amount / 100} /></span>
+            <span style={{ fontWeight: 700, fontSize: 18 }}><MoneyDisplay amount={payment.amount} /></span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span className="hint">Currency</span>
@@ -90,8 +90,8 @@ export default async function PaymentDetailPage({
               <p style={{ fontWeight: 700 }}>Invoice</p>
               <p className="hint">#{invoice.invoiceNumber}</p>
             </div>
-            {invoice.pdfUrl ? (
-              <a href={invoice.pdfUrl} target="_blank" rel="noopener noreferrer" className="button button-secondary">
+            {invoice.fileUrl ? (
+              <a href={invoice.fileUrl} target="_blank" rel="noopener noreferrer" className="button button-secondary">
                 View Invoice
               </a>
             ) : (

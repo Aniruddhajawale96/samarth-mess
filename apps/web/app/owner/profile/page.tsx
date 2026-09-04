@@ -325,7 +325,7 @@ export default function OwnerProfilePage() {
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span className="hint">Monthly Price</span>
-                  <span style={{ fontWeight: 600 }}><MoneyDisplay amount={mess.monthlyPrice / 100} /></span>
+                  <span style={{ fontWeight: 600 }}><MoneyDisplay amount={mess.monthlyPrice} /></span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span className="hint">Meals / Day</span>

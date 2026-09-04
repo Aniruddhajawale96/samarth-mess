@@ -107,8 +107,9 @@ export default function ScanScanner() {
     setSuccessMsg("");
 
     try {
+      // qrApi.resolveQr already unwraps the API envelope, so the user is at the top level.
       const resolveRes = await qrApi.resolveQr(token) as any;
-      const user = resolveRes.data.user;
+      const user = resolveRes.user;
       
       setScannedData({ token, user });
 

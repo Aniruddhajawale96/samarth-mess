@@ -4,6 +4,26 @@
 -- ============================================================================
 
 -- ============================================================================
+-- 0. PORTABILITY SHIM
+--
+-- These policies reference auth.uid(), which only exists on Supabase. Local and
+-- CI databases (plain PostgreSQL, e.g. docker-compose) therefore failed at this
+-- migration. When the Supabase `auth` schema is absent we create a compatible
+-- no-op auth.uid() (always NULL) so the migration is portable. On Supabase the
+-- schema already exists and this block is a no-op — auth.uid() is never touched.
+-- ============================================================================
+DO $shim$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'auth') THEN
+    CREATE SCHEMA auth;
+    CREATE OR REPLACE FUNCTION auth.uid()
+    RETURNS uuid AS $func$
+      SELECT NULL::uuid;
+    $func$ LANGUAGE sql STABLE;
+  END IF;
+END $shim$;
+
+-- ============================================================================
 -- 1. USERS TABLE
 -- ============================================================================
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;

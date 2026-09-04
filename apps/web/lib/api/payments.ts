@@ -22,7 +22,8 @@ export interface InvoiceRecord {
   id: string;
   paymentId: string;
   invoiceNumber: string;
-  pdfUrl: string | null;
+  /** Absolute or relative URL of the generated invoice PDF (backend column file_url). */
+  fileUrl: string | null;
   createdAt: string;
 }
 
