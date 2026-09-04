@@ -1,16 +1,46 @@
 # Deployment
 
-## Environments
+## Production topology
 
-Use separate GitHub Environments for `development`, `staging`, and `production`. Store `DATABASE_URL`, `JWT_SECRET`, and `COOKIE_SECRET` as environment secrets. Store `API_URL` and `FRONTEND_URL` as non-secret environment variables.
+- Render hosts the Express API from `render.yaml`.
+- Vercel hosts the Next.js web app.
+- Supabase (or another hosted PostgreSQL provider) supplies `DATABASE_URL`.
+- A managed Redis provider supplies `REDIS_URL`.
+- GitHub Actions runs validation only through `.github/workflows/ci.yml`.
 
-## Release flow
+The old Docker-based CD workflow was removed because it only ran containers on a temporary GitHub runner; it did not deploy those containers to Render.
 
-The `CD` workflow builds all containers, starts PostgreSQL and Redis, runs Drizzle migrations, starts the API, worker, and web services, and fails when `/health` does not respond successfully.
+## Render API environment
+
+Set these values in the Render service's Environment page. Render generates `JWT_SECRET` and `COOKIE_SECRET` from the blueprint.
+
+```text
+NODE_ENV=production
+API_URL=https://<your-render-api>.onrender.com
+DATABASE_URL=<rotated-hosted-postgresql-url>
+REDIS_URL=<managed-redis-url>
+JWT_SECRET=<render-generated-value>
+COOKIE_SECRET=<render-generated-value>
+FRONTEND_URL=https://<your-vercel-app>.vercel.app
+```
+
+`RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` are optional, but must be supplied together. WhatsApp is optional; leave both WhatsApp credential variables unset until they are available.
+
+Render uses the API health check at `/health` and automatically redeploys when changes are pushed to the configured branch.
+
+## Vercel web environment
+
+Set this build-time variable in Vercel:
+
+```text
+NEXT_PUBLIC_API_URL=https://<your-render-api>.onrender.com
+```
+
+Enable automatic deployments from the same branch used by Render.
 
 ## Rollback
 
-Keep the previously deployed image or source revision available. To roll back, deploy that revision with the same environment secrets, run the normal migration step, and restart the services. Database migrations must remain backward-compatible with the previous application revision before a release is promoted.
+Use Render's deploy history to redeploy a previous API revision and Vercel's deployment history to promote a previous frontend deployment. Database migrations must remain backward-compatible with the previous application revision before a release is promoted.
 
 ## Local container runtime
 
