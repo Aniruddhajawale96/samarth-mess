@@ -188,7 +188,7 @@ export default function UserProfilePage() {
       {/* History links */}
       <div className="panel" style={{ padding: 0, overflow: "hidden" }}>
         {[
-          { href: "/user/history/payments", label: "Payment History" },
+          { href: "/user/payments", label: "Payment History" },
           { href: "/user/history/bookings", label: "Booking History" },
           { href: "/user/history/attendance", label: "Attendance History" },
           { href: "/user/qr", label: "My QR Code" },

@@ -122,7 +122,7 @@ export default async function UserDashboardPage() {
         <h2 style={{ fontSize: 18, borderBottom: "1px solid var(--line)", paddingBottom: 8 }}>Quick Actions</h2>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Link href="/user/qr" className="button button-secondary" style={{ textAlign: "center" }}>My QR</Link>
-          <Link href="/user/history/payments" className="button button-secondary" style={{ textAlign: "center" }}>Payments</Link>
+          <Link href="/user/payments" className="button button-secondary" style={{ textAlign: "center" }}>Payments</Link>
           <Link href="/user/history/bookings" className="button button-secondary" style={{ textAlign: "center" }}>History</Link>
           <Link href="/user/profile" className="button button-secondary" style={{ textAlign: "center" }}>Profile</Link>
         </div>

@@ -31,7 +31,7 @@ export default async function UserLayout({ children }: { children: React.ReactNo
           <Link href="/user" className="nav-item nav-active">Home</Link>
           <Link href="/user/menu" className="nav-item">Menu</Link>
           <Link href="/user/book-meal" className="nav-item">Book Meal</Link>
-          <Link href="/user/history/payments" className="nav-item">Payments</Link>
+          <Link href="/user/payments" className="nav-item">Payments</Link>
           <Link href="/user/profile" className="nav-item">Profile</Link>
         </aside>
 
@@ -44,7 +44,7 @@ export default async function UserLayout({ children }: { children: React.ReactNo
         <Link href="/user" className="nav-item text-center">Home</Link>
         <Link href="/user/menu" className="nav-item text-center">Menu</Link>
         <Link href="/user/book-meal" className="nav-item text-center">Book</Link>
-        <Link href="/user/history/payments" className="nav-item text-center">Pay</Link>
+        <Link href="/user/payments" className="nav-item text-center">Pay</Link>
         <Link href="/user/profile" className="nav-item text-center">Profile</Link>
       </nav>
     </div>
